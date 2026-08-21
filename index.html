@@ -123,6 +123,15 @@
     border-radius: 12px; padding: 13px 16px;
   }
 
+  .note code.cmd {
+    display: inline-block;
+    white-space: nowrap;
+    margin-top: 8px;
+  }
+  @media (max-width: 440px) {
+    .note code.cmd { display: block; overflow-x: auto; }
+  }
+
   footer {
     position: relative;
     border-top: 1px solid var(--hairline); margin-top: 48px;
@@ -201,7 +210,7 @@
       <li><strong>Open it once</strong><span>Right-click the app → <em>Open</em>. Only needed the first time.</span></li>
       <li><strong>Drop your project</strong><span>Drag a <code>.tex</code> folder onto the window and follow the diagnosis.</span></li>
     </ol>
-    <div class="note">⚠️ This build is signed with a free Apple ID and is not notarized by Apple. It opens normally on this Mac; on other Macs, right-click → <em>Open</em> the first time (or run <code>xattr -dr com.apple.quarantine Knurl.app</code>).</div>
+    <div class="note">⚠️ This build is signed with a free Apple ID and is not notarized by Apple. It opens normally on this Mac; on other Macs, right-click → <em>Open</em> the first time, or run:<br><code class="cmd">xattr -dr com.apple.quarantine Knurl.app</code></div>
   </section>
 </main>
 
