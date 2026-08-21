@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Knurl — Diagnóstico e instalação de pacotes TeX para macOS</title>
+<meta name="description" content="Knurl analisa seus projetos LaTeX, detecta engines e pacotes faltando e instala tudo com um clique. macOS 15+.">
+<style>
+  :root {
+    --bg: #17120A;
+    --card: rgba(255,255,255,.07);
+    --card-hover: rgba(255,255,255,.11);
+    --accent: #F5C542;
+    --text: #EDE6DA;
+    --text-2: rgba(237,230,218,.62);
+    --hairline: rgba(255,255,255,.08);
+    --green: #3CB371;
+    --orange: #F0714E;
+    --blue: #4FA3E3;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(900px 500px at 85% -10%, rgba(217,160,102,.10), transparent 60%),
+      radial-gradient(700px 420px at -10% 110%, rgba(79,163,227,.05), transparent 60%);
+    pointer-events: none;
+  }
+  main { position: relative; max-width: 980px; margin: 0 auto; padding: 0 24px; }
+
+  /* Hero */
+  .hero { text-align: center; padding: 96px 0 64px; }
+  .hero img {
+    width: 148px; height: 148px;
+    border-radius: 33px;
+    box-shadow: 0 24px 60px rgba(0,0,0,.55), 0 0 0 1px var(--hairline);
+    margin-bottom: 32px;
+  }
+  h1 { font-size: clamp(40px, 7vw, 64px); font-weight: 700; letter-spacing: -.02em; }
+  .tagline { font-size: clamp(17px, 2.4vw, 21px); color: var(--text-2); max-width: 560px; margin: 16px auto 36px; }
+  .chips { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 40px; }
+  .chip {
+    font-size: 12px; font-weight: 600; letter-spacing: .04em;
+    color: var(--accent);
+    background: rgba(245,197,66,.14);
+    border-radius: 999px; padding: 5px 14px;
+  }
+  .chip.g { color: var(--green); background: rgba(60,179,113,.14); }
+  .chip.b { color: var(--blue); background: rgba(79,163,227,.14); }
+
+  .btn-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    display: inline-block; text-decoration: none;
+    font-size: 15px; font-weight: 600;
+    padding: 13px 30px; border-radius: 14px;
+    transition: transform .15s ease, filter .15s ease;
+  }
+  .btn:hover { transform: translateY(-1px); filter: brightness(1.06); }
+  .btn-primary { background: var(--accent); color: #17120A; box-shadow: 0 10px 26px rgba(245,197,66,.25); }
+  .btn-ghost { color: var(--text); background: var(--card); border: 1px solid var(--hairline); }
+  .dl-meta { margin-top: 14px; font-size: 13px; color: var(--text-2); }
+
+  /* Sections */
+  section { padding: 48px 0; }
+  h2 { font-size: 28px; font-weight: 700; letter-spacing: -.01em; margin-bottom: 8px; }
+  .section-sub { color: var(--text-2); margin-bottom: 28px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--hairline);
+    border-radius: 18px; padding: 22px;
+    transition: background .2s ease, transform .2s ease;
+  }
+  .card:hover { background: var(--card-hover); transform: translateY(-2px); }
+  .card .glyph {
+    width: 38px; height: 38px; border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 19px; margin-bottom: 14px;
+  }
+  .card h3 { font-size: 16px; font-weight: 650; margin-bottom: 6px; }
+  .card p { font-size: 14px; color: var(--text-2); }
+  .g-gold { background: rgba(245,197,66,.15); }
+  .g-green { background: rgba(60,179,113,.15); }
+  .g-blue { background: rgba(79,163,227,.15); }
+  .g-orange { background: rgba(240,113,78,.15); }
+
+  ol.steps { list-style: none; counter-reset: step; max-width: 640px; }
+  ol.steps li {
+    counter-increment: step;
+    position: relative; padding: 0 0 22px 56px;
+  }
+  ol.steps li::before {
+    content: counter(step);
+    position: absolute; left: 0; top: 0;
+    width: 34px; height: 34px; border-radius: 50%;
+    background: var(--card); border: 1px solid var(--hairline);
+    color: var(--accent); font-weight: 700; font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  ol.steps strong { display: block; font-size: 15px; margin-bottom: 2px; }
+  ol.steps span { font-size: 14px; color: var(--text-2); }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace;
+    font-size: .88em; background: var(--card);
+    border: 1px solid var(--hairline);
+    border-radius: 6px; padding: 1px 7px;
+  }
+  .note {
+    max-width: 640px; margin-top: 18px;
+    font-size: 13.5px; color: var(--text-2);
+    background: rgba(240,113,78,.09);
+    border: 1px solid rgba(240,113,78,.22);
+    border-radius: 12px; padding: 13px 16px;
+  }
+
+  footer {
+    position: relative;
+    text-align: center; padding: 44px 24px 56px;
+    font-size: 13px; color: var(--text-2);
+    border-top: 1px solid var(--hairline); margin-top: 48px;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<main>
+  <header class="hero">
+    <img src="icon.png" alt="Ícone do Knurl">
+    <h1>Knurl</h1>
+    <p class="tagline">Diagnóstico e instalação de pacotes TeX para macOS. Arraste seu projeto <code>.tex</code>, descubra o que falta, instale com um clique.</p>
+    <div class="chips">
+      <span class="chip g">macOS 15+</span>
+      <span class="chip">Apple Silicon</span>
+      <span class="chip b">Grátis &amp; open source</span>
+    </div>
+    <div class="btn-row">
+      <a class="btn btn-primary" href="Knurl.zip" download>⬇ Baixar Knurl</a>
+      <a class="btn btn-ghost" href="https://github.com/gilsonolegario/knurl">Código-fonte</a>
+    </div>
+    <p class="dl-meta">v1.0 · ~3 MB · build arm64</p>
+  </header>
+
+  <section id="features">
+    <h2>O que ele faz</h2>
+    <p class="section-sub">Do erro de compilação ao pacote instalado, sem sair do app.</p>
+    <div class="grid">
+      <div class="card">
+        <div class="glyph g-gold">📄</div>
+        <h3>Análise de projetos .tex</h3>
+        <p>Arraste a pasta ou o arquivo principal: o Knurl mapeia classes, pacotes (<code>\usepackage</code>) e engines usados.</p>
+      </div>
+      <div class="card">
+        <div class="glyph g-orange">🔍</div>
+        <h3>Diagnóstico do ambiente</h3>
+        <p>Detecta distribuição (TeX Live, BasicTeX, Tectonic), engines ativos e o que está quebrado ou ausente.</p>
+      </div>
+      <div class="card">
+        <div class="glyph g-blue">🗺️</div>
+        <h3>Mapa CTAN → TL</h3>
+        <p>Nomes de pacote do CTAN traduzidos para os nomes reais no TeX Live — overrides embutidos + mapa oficial do TUG.</p>
+      </div>
+      <div class="card">
+        <div class="glyph g-green">📦</div>
+        <h3>Instalação com um clique</h3>
+        <p>Instala os pacotes faltantes via <code>tlmgr</code>, pedindo privilégio de admin só quando necessário.</p>
+      </div>
+      <div class="card">
+        <div class="glyph g-green">📊</div>
+        <h3>Relatório exportável</h3>
+        <p>Gera relatório completo em JSON ou Markdown — ambiente, pacotes e ações realizadas.</p>
+      </div>
+      <div class="card">
+        <div class="glyph g-gold">✨</div>
+        <h3>UI nativa em glass</h3>
+        <p>Janela translúcida, sidebar flutuante e tiles de status — feita para Sequoia, clara e escura.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="install">
+    <h2>Como instalar</h2>
+    <p class="section-sub">Menos de um minuto.</p>
+    <ol class="steps">
+      <li><strong>Baixe o Knurl</strong><span>Clique em “Baixar Knurl” e descompacte o <code>Knurl.zip</code>.</span></li>
+      <li><strong>Mova para Aplicativos</strong><span>Arraste <code>Knurl.app</code> para a pasta <code>/Applications</code>.</span></li>
+      <li><strong>Abra na primeira vez</strong><span>Botão direito no app → <em>Abrir</em>. É só na primeira abertura.</span></li>
+      <li><strong>Arraste seu projeto</strong><span>Solte uma pasta <code>.tex</code> na janela e siga o diagnóstico.</span></li>
+    </ol>
+    <div class="note">⚠️ O build é assinado com uma conta Apple gratuita e não passa por notarização da Apple. No seu Mac ele abre normal; em outros Macs, use botão direito → <em>Abrir</em> na primeira vez (ou <code>xattr -dr com.apple.quarantine Knurl.app</code>).</div>
+  </section>
+</main>
+
+<footer>
+  Feito com Swift 6 + SwiftUI para macOS Sequoia ·
+  <a href="https://github.com/gilsonolegario/knurl">github.com/gilsonolegario/knurl</a>
+</footer>
+</body>
+</html>
