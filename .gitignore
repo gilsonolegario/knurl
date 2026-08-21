@@ -1,0 +1,9 @@
+.build/
+.swiftpm/
+.DS_Store
+
+# not for repo
+Tests/
+.superpowers/
+docs/
+Sources/Knurl/Resources/Icon_*_backup.png
