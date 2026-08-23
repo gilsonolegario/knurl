@@ -4,27 +4,22 @@
 <dict>
 	<key>files</key>
 	<dict>
-		<key>Resources/Knurl.icns</key>
+		<key>Resources/Icon.png</key>
 		<data>
-		MZYq/6tIaKshVq0bbHrMgTL2TCU=
+		wt6G4r9PngcSFhBUfwFhd8/OfLI=
 		</data>
 	</dict>
 	<key>files2</key>
 	<dict>
-		<key>MacOS/Knurl_Knurl.bundle</key>
+		<key>Resources/Icon.png</key>
 		<dict>
-			<key>cdhash</key>
+			<key>hash</key>
 			<data>
-			mob01saTMJjp+g+j08jhG0AoMBk=
+			wt6G4r9PngcSFhBUfwFhd8/OfLI=
 			</data>
-			<key>requirement</key>
-			<string>identifier "Knurl.Knurl.resources" and anchor apple generic and certificate leaf[subject.CN] = "Apple Development: gilsonolegario@gmail.com (276K7874PP)" and certificate 1[field.1.2.840.113635.100.6.2.1] /* exists */</string>
-		</dict>
-		<key>Resources/Knurl.icns</key>
-		<dict>
 			<key>hash2</key>
 			<data>
-			EwYGA8FGmikrQ2vaV1wTBfezc6+2K1KoK3VTKAwYn3w=
+			XAgXWIzmiIATIYCyKFM21aZcEasDHZcsDj5RScg7iyM=
 			</data>
 		</dict>
 	</dict>
