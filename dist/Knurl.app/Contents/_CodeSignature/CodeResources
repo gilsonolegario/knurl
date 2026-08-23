@@ -8,23 +8,91 @@
 		<data>
 		MZYq/6tIaKshVq0bbHrMgTL2TCU=
 		</data>
+		<key>Resources/Knurl_Knurl.bundle/Contents/Info.plist</key>
+		<data>
+		eZLxwRlzUeuWJEnmG9xd8FhcmCw=
+		</data>
+		<key>Resources/Knurl_Knurl.bundle/Contents/Resources/Icon.png</key>
+		<data>
+		wt6G4r9PngcSFhBUfwFhd8/OfLI=
+		</data>
+		<key>Resources/Knurl_Knurl.bundle/Contents/_CodeSignature/CodeDirectory</key>
+		<data>
+		t55BRSqKJJAM9s5p0hxHR21QEg8=
+		</data>
+		<key>Resources/Knurl_Knurl.bundle/Contents/_CodeSignature/CodeRequirements</key>
+		<data>
+		J2SLMBWmD+VGki3Ik1IpvA0Y/uM=
+		</data>
+		<key>Resources/Knurl_Knurl.bundle/Contents/_CodeSignature/CodeRequirements-1</key>
+		<data>
+		mePQkscOIcqSBeclyV2EPZedw+E=
+		</data>
+		<key>Resources/Knurl_Knurl.bundle/Contents/_CodeSignature/CodeResources</key>
+		<data>
+		mTw0Zl5zyOYKgGNONloaTlEVOh8=
+		</data>
+		<key>Resources/Knurl_Knurl.bundle/Contents/_CodeSignature/CodeSignature</key>
+		<data>
+		fgHW0mqWoyoboYdFwdv8FJf8pXM=
+		</data>
 	</dict>
 	<key>files2</key>
 	<dict>
-		<key>MacOS/Knurl_Knurl.bundle</key>
-		<dict>
-			<key>cdhash</key>
-			<data>
-			mob01saTMJjp+g+j08jhG0AoMBk=
-			</data>
-			<key>requirement</key>
-			<string>identifier "Knurl.Knurl.resources" and anchor apple generic and certificate leaf[subject.CN] = "Apple Development: gilsonolegario@gmail.com (276K7874PP)" and certificate 1[field.1.2.840.113635.100.6.2.1] /* exists */</string>
-		</dict>
 		<key>Resources/Knurl.icns</key>
 		<dict>
 			<key>hash2</key>
 			<data>
 			EwYGA8FGmikrQ2vaV1wTBfezc6+2K1KoK3VTKAwYn3w=
+			</data>
+		</dict>
+		<key>Resources/Knurl_Knurl.bundle/Contents/Info.plist</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			BSVRO80SH8kofX+AMc1DPmCgXBE/eC0ir1u6rYoiBL0=
+			</data>
+		</dict>
+		<key>Resources/Knurl_Knurl.bundle/Contents/Resources/Icon.png</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			XAgXWIzmiIATIYCyKFM21aZcEasDHZcsDj5RScg7iyM=
+			</data>
+		</dict>
+		<key>Resources/Knurl_Knurl.bundle/Contents/_CodeSignature/CodeDirectory</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			98ZlnjhCmXM7IAAHOnPAouvfcqVDEGR3iv2UcXcCDd0=
+			</data>
+		</dict>
+		<key>Resources/Knurl_Knurl.bundle/Contents/_CodeSignature/CodeRequirements</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			HOB6bYFypRE0KCYXRdEYqwDji3hwPIA7AbRj/+F4/Io=
+			</data>
+		</dict>
+		<key>Resources/Knurl_Knurl.bundle/Contents/_CodeSignature/CodeRequirements-1</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			mob01saTMJjp+g+j08jhG0AoMBl1DYj6Bx7GrWNzWNo=
+			</data>
+		</dict>
+		<key>Resources/Knurl_Knurl.bundle/Contents/_CodeSignature/CodeResources</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			z/xO/VB/oaFtEEn0NhUoJS8fwlgtKs9hPBaAl+eTxwM=
+			</data>
+		</dict>
+		<key>Resources/Knurl_Knurl.bundle/Contents/_CodeSignature/CodeSignature</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			dzRNERys3swvo9Ck79OrDc6jlwUuUXDWs1Hyqpe6cDg=
 			</data>
 		</dict>
 	</dict>
