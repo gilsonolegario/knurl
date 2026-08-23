@@ -1,7 +1,11 @@
+// ReportViewModel.swift — Observable state for the report: analysis, log, install overrides, compile detection, and batch install.
+
 import Foundation
 import Combine
 import KnurlCore
 
+/// Main view-model for the report workflow: drives analysis, log streaming,
+/// package resolution, install overrides, and compile-based missing detection.
 @MainActor
 final class ReportViewModel: ObservableObject {
     @Published var report: TeXReport?
@@ -31,14 +35,19 @@ final class ReportViewModel: ObservableObject {
         self.detectorFactory = detectorFactory
     }
 
+    // MARK: - State
+
+    /// Appends a line to the live log buffer.
     func appendLog(_ line: String) {
         log.append(line)
     }
 
+    /// Marks a package as installed via a post-install override.
     func markInstalled(_ id: String) {
         installOverrides[id] = .installed
     }
 
+    /// Marks a package as missing via an override.
     func markMissing(_ id: String) {
         installOverrides[id] = .missing
     }
@@ -57,8 +66,11 @@ final class ReportViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Batch install
+
     var installableMissingCount: Int { installableMissing().count }
 
+    /// Queues all missing packages for sequential installation via the coordinator.
     func installAllMissing() {
         guard !isInstallingAll, let handler = installHandler else { return }
         let rows = installableMissing()
@@ -93,6 +105,9 @@ final class ReportViewModel: ObservableObject {
         return result
     }
 
+    // MARK: - Analysis
+
+    /// Builds a TeXReport from a .tex file/folder URL, streaming log output and cancelling any in-flight build.
     func analyze(at url: URL) {
         generation += 1
         let gen = generation
@@ -148,6 +163,7 @@ final class ReportViewModel: ObservableObject {
         }
     }
 
+    /// Compiles the project to discover packages missing at compile time (independent of the static analysis).
     func detectMissingPackages(at url: URL? = nil) {
         let targetURL = url ?? lastAnalyzedURL ?? URL(fileURLWithPath: NSTemporaryDirectory())
         let gen = generation

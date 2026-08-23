@@ -1,13 +1,19 @@
+// TeXAnalyzer.swift — Scans TeX project files and extracts all dependency elements via regex parsing.
+
 import Foundation
 
+/// Scans a TeX project directory and extracts all dependency elements from source files.
 public struct TeXAnalyzer: @unchecked Sendable {
     private var fm: FileManager { FileManager.default }
+    /// Optional callback invoked with a progress message for each file scanned.
     private let onProgress: (@Sendable (String) -> Void)?
 
     public init(onProgress: (@Sendable (String) -> Void)? = nil) {
         self.onProgress = onProgress
     }
 
+    /// Analyzes a project directory (or single `.tex` file) and returns all extracted elements.
+    /// Respects `fileLimit` to cap the number of files scanned (default 500).
     public func analyze(at url: URL, fileLimit: Int = 500) throws -> TeXProject {
         var isDir: ObjCBool = false
         guard fm.fileExists(atPath: url.path, isDirectory: &isDir) else {
@@ -85,6 +91,7 @@ public struct TeXAnalyzer: @unchecked Sendable {
         return dedupe(TeXProject(rootPath: root.path, files: files, localPackages: localStyNames))
     }
 
+    /// Removes duplicate elements across files (same kind + value), keeping the first occurrence.
     private func dedupe(_ project: TeXProject) -> TeXProject {
         var seen = Set<String>()
         var files = project.files
@@ -97,6 +104,7 @@ public struct TeXAnalyzer: @unchecked Sendable {
         return TeXProject(rootPath: project.rootPath, files: files, localPackages: project.localPackages)
     }
 
+    /// Applies regex patterns to a single line, extracting matched elements.
     private func parseLine(_ line: String, file: String, lineNo: Int, into elements: inout [TeXElement]) {
         add(.documentClass, pattern: #"\\documentclass\s*(?:\[[^\]]*\])?\s*\{([^}]+)\}"#)
         addMulti(.usepackage, pattern: #"\\usepackage\s*(?:\[[^\]]*\])?\s*\{([^}]+)\}"#)
@@ -130,6 +138,7 @@ public struct TeXAnalyzer: @unchecked Sendable {
         return firstCapture(pattern, in: matched) ?? matched
     }
 
+    /// Returns all capture-group-1 values from all regex matches in the line.
     private func firstMatchList(_ pattern: String, in line: String) -> [String] {
         guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
         let ns = line as NSString
@@ -152,6 +161,7 @@ public struct TeXAnalyzer: @unchecked Sendable {
         return ns.substring(with: match.range(at: 1))
     }
 
+    /// Resolves an `\input{foo}` value to an absolute `.tex` URL relative to the including file.
     private func resolve(_ value: String, relativeTo fileURL: URL) -> URL {
         let base = fileURL.deletingLastPathComponent()
         var path = value
@@ -167,6 +177,7 @@ public enum TeXError: Error {
 }
 
 private extension String {
+    /// Strips TeX comments (everything after unescaped `%`) from a line.
     func strippingTeXComment() -> String {
         // `%` é comentário a menos que precedido por um número ÍMPAR de backslashes
         // (`\%` = literal; `\\%` = quebra de linha + comentário; `\\\%` = literal).

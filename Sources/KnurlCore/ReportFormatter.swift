@@ -1,6 +1,10 @@
+// ReportFormatter.swift — Formats a TeXReport as Markdown or JSON for display and export.
+
 import Foundation
 
+/// Renders a `TeXReport` into human-readable or machine-readable formats.
 public enum ReportFormatter {
+    /// Produces a Markdown table with columns: Element, Package, Status, Action.
     public static func markdown(_ report: TeXReport) -> String {
         var md = "# Relatório de Pacotes TeX\n\n"
         md += "Fonte: \(report.source == "ctan" ? "CTAN (online)" : "heurística (offline)")\n\n"
@@ -16,6 +20,7 @@ public enum ReportFormatter {
         return md
     }
 
+    /// Encodes the report as pretty-printed JSON with sorted keys.
     public static func json(_ report: TeXReport) throws -> Data {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]

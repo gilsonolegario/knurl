@@ -1,3 +1,5 @@
+// NativeAdminRunner.swift — Executes shell commands with administrator privileges via NSAppleScript (native macOS auth dialog).
+
 import Foundation
 import KnurlCore
 

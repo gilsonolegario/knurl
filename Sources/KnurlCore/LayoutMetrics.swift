@@ -1,9 +1,13 @@
+// LayoutMetrics.swift — UI layout constants and phase-dependent sizing for the popover window.
+
 import Foundation
 
+/// Current state of the analysis UI, used to determine visible components.
 public enum AnalysisPhase {
     case idle, loading, error, hasLog, hasReport
 }
 
+/// Centralized layout constants for the popover UI (sizes in points).
 public struct LayoutMetrics {
     public static let windowHeight: CGFloat = 440
     public static let compactWindowHeight: CGFloat = 226
@@ -28,6 +32,7 @@ public struct LayoutMetrics {
     public static let rollingLogCollapsedHeight: CGFloat = 28
     public static let logLineHeight: CGFloat = 16
     public static let logPadding: CGFloat = 16
+    /// Maximum number of log lines kept in memory.
     public static let logBufferLimit: Int = 200
 
     // Sidebar layout
@@ -39,6 +44,7 @@ public struct LayoutMetrics {
     public static let contentPaddingTrailing: CGFloat = 24
     public static let contentPaddingBottom: CGFloat = 28
 
+    /// Returns the available height for the rolling log panel given the current analysis phase.
     public static func availableLogHeight(phase: AnalysisPhase) -> CGFloat {
         switch phase {
         case .loading:

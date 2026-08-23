@@ -1,5 +1,8 @@
+// ValueTile.swift — Generic card displaying an eyebrow label, large value, subtitle, and optional chip.
+
 import SwiftUI
 
+/// A GlassCard-backed stat tile with an eyebrow, large monospaced value, and optional chip badge.
 struct ValueTile: View {
     let eyebrow: String
     let value: String

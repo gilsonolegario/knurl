@@ -1,13 +1,24 @@
+// TeXDistribution.swift — Detects the installed TeX Live distribution, year, root path, and available engines.
+
 import Foundation
 
+/// Information about the TeX Live installation detected on the system.
 public struct TeXDistribution: Sendable, Equatable {
     public enum State: String, Sendable, Equatable {
-        case ok, missing, broken
+        /// A valid TeX Live installation was found (via tlmgr or /Library/TeX/texbin).
+        case ok
+        /// No TeX Live installation detected at all.
+        case missing
+        /// A symlink exists but points to a non-existent target.
+        case broken
     }
 
     public let state: State
+    /// Four-digit year of the TeX Live release (e.g. `"2024"`), if detectable.
     public let year: String?
+    /// Root path of the TeX Live installation (e.g. `/usr/local/texlive/2024`).
     public let root: String?
+    /// Set of engine names found on PATH (e.g. `{"pdflatex", "xelatex"}`).
     public let engines: Set<String>
 
     public init(state: State, year: String? = nil, root: String? = nil, engines: Set<String> = []) {
@@ -20,6 +31,7 @@ public struct TeXDistribution: Sendable, Equatable {
     public typealias Lookup = @Sendable (String) -> String?
     public typealias SymlinkTarget = @Sendable (String) -> String?
 
+    /// Probes the system for a TeX Live installation. Checks tlmgr first, then /Library/TeX/texbin symlinks.
     public static func detect(
         lookup: Lookup = { TeXEnvironment.locateExecutable($0) },
         symlinkTarget: SymlinkTarget = { path in
@@ -51,6 +63,7 @@ public struct TeXDistribution: Sendable, Equatable {
         return TeXDistribution(state: .missing, engines: engines)
     }
 
+    /// Extracts the TeX Live root and year from a path like `/usr/local/texlive/2024/bin/...`.
     private static func parseTLRoot(from executablePath: String) -> (root: String?, year: String?) {
         let parts = executablePath.components(separatedBy: "/")
         for (index, part) in parts.enumerated() where part == "texlive" {

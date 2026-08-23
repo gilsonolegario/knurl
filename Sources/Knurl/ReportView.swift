@@ -1,3 +1,5 @@
+// ReportView.swift — Package report table with status filter, action row, install-all, compile-missing section, and context menus.
+
 import SwiftUI
 import KnurlCore
 
@@ -42,6 +44,9 @@ struct ReportView: View {
         }
     }
 
+    // MARK: - Sections
+
+    /// Segmented status filter (All / Missing / Installed / Native / …).
     private func statusFilter(_ packages: [PackageInfo]) -> some View {
         let counts = Dictionary(grouping: packages, by: \.status).mapValues(\.count)
         let statuses: [(PackageStatus, String)] = [
@@ -61,6 +66,7 @@ struct ReportView: View {
         .labelsHidden()
     }
 
+    /// Summary line: "X of Y packages installed".
     private var completionSummary: some View {
         HStack(spacing: 6) {
             Image(systemName: "checkmark.circle.fill")
@@ -75,6 +81,7 @@ struct ReportView: View {
         }
     }
 
+    /// "Detect missing" and "Install all" buttons with keyboard shortcuts.
     private var actionRow: some View {
         HStack(spacing: 10) {
             Button {
@@ -121,6 +128,7 @@ struct ReportView: View {
         }
     }
 
+    /// Main table with Element, Package, Status, and Action columns.
     private var mainTable: some View {
         Table(visiblePackages, selection: $tableSelection) {
             TableColumn("Element") { Text($0.element.value).uninstallMenu($0, coordinator: coordinator, environment: environment, onUninstall: queueUninstall, onUpdate: onUpdatePackage) }
@@ -154,10 +162,12 @@ struct ReportView: View {
         }
     }
 
+    /// Enqueues a package for uninstall confirmation.
     private func queueUninstall(_ package: PackageInfo) {
         pendingUninstall = package
     }
 
+    /// Table of packages discovered by compilation (compile-detect flow).
     @ViewBuilder
     private func compileSection(_ missing: [PackageInfo]) -> some View {
         VStack(alignment: .leading, spacing: 8) {

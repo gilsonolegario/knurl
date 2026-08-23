@@ -1,7 +1,11 @@
+// DropZoneView.swift — Drag-and-drop target that accepts .tex files or folders for analysis, with prominent and slim modes.
+
 import SwiftUI
 import AppKit
 import UniformTypeIdentifiers
 
+/// Drop zone that accepts `.tex` files or folders for TeX analysis.
+/// Shows a prominent empty-state or a compact inline bar depending on `prominent`.
 struct DropZone: View {
     @Binding var isTargeted: Bool
     var prominent: Bool = true
@@ -76,6 +80,7 @@ struct DropZone: View {
     }
 }
 
+/// ViewModifier that wires `onDrop` and click-to-open gestures to a drop zone.
 private struct DropZoneGestures: ViewModifier {
     @Binding var isTargeted: Bool
     @Binding var confirmed: Bool

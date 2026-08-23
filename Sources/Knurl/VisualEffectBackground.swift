@@ -1,6 +1,9 @@
+// VisualEffectBackground.swift — NSVisualEffectView wrapper providing the translucent behind-window blur.
+
 import SwiftUI
 import AppKit
 
+/// Wraps `NSVisualEffectView` as a SwiftUI view for the window's translucent background material.
 struct VisualEffectBackground: NSViewRepresentable {
     var material: NSVisualEffectView.Material = .underWindowBackground
     var blendingMode: NSVisualEffectView.BlendingMode = .behindWindow

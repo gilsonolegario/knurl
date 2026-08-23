@@ -1,7 +1,10 @@
+// GlassCard.swift — Reusable translucent card wrapper and small UI primitives (Eyebrow, Chip, ShortcutHint).
+
 import SwiftUI
 
 // MARK: - GlassCard
 
+/// A frosted-glass card container with consistent padding, corner radius, and shadow.
 struct GlassCard<Content: View>: View {
     let content: Content
     var padding: CGFloat = 16
@@ -22,6 +25,7 @@ struct GlassCard<Content: View>: View {
 
 // MARK: - Eyebrow
 
+/// Small uppercase label used as a card eyebrow header.
 struct Eyebrow: View {
     let text: String
     var color: Color = Brand.accent
@@ -43,6 +47,7 @@ struct Eyebrow: View {
 
 // MARK: - Chip
 
+/// Colored pill badge for short status text.
 struct Chip: View {
     let text: String
     var color: Color = Brand.accent
@@ -60,6 +65,7 @@ struct Chip: View {
 
 // MARK: - ShortcutHint
 
+/// Keyboard-shortcut hint label (e.g. "⌘D").
 struct ShortcutHint: View {
     let text: String
     var color: Color = Brand.textTertiary

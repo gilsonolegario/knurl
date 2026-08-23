@@ -1,7 +1,10 @@
+// InstallCoordinator.swift — Drives install, uninstall, update, and bootstrap workflows for TeX packages via tlmgr and CTAN.
+
 import Foundation
 import Combine
 import KnurlCore
 
+/// Tracks the lifecycle state of a single install/uninstall/update operation.
 enum InstallState: Equatable {
     case idle
     case running(phase: String)
@@ -11,8 +14,12 @@ enum InstallState: Equatable {
     case uninstalled
 }
 
+/// Coordinates all package lifecycle operations (install, uninstall, update, bootstrap).
+/// Publishes per-package `InstallState` values that the UI observes directly.
 @MainActor
 final class InstallCoordinator: ObservableObject {
+
+    // MARK: - State
     static let bootstrapKey = "__bootstrap__"
     static let updatePrefix = "update:"
     @Published private(set) var states: [String: InstallState] = [:]
@@ -32,6 +39,9 @@ final class InstallCoordinator: ObservableObject {
         self.onUninstalled = onUninstalled
     }
 
+    // MARK: - Public actions
+
+    /// Kicks off a TeX Live bootstrap if tlmgr is not yet on PATH.
     func bootstrapTeXLive() {
         guard TeXEnvironment.locateExecutable("tlmgr") == nil else {
             onLog("tlmgr is already available.")
@@ -42,22 +52,26 @@ final class InstallCoordinator: ObservableObject {
         Task { await runBootstrap() }
     }
 
+    /// Begins installing a single package using the resolved strategy.
     func install(package: PackageInfo, strategy: InstallStrategy) {
         if case .running = states[package.id] { return }
         Task { await perform(package, strategy: strategy) }
     }
 
+    /// Begins uninstalling a package (tlmgr remove → user-tree fallback).
     func uninstall(package: PackageInfo) {
         if case .running = states[package.id] { return }
         Task { await performUninstall(package) }
     }
 
+    /// Triggers a tlmgr update for a single package.
     func update(named name: String) {
         let key = "\(Self.updatePrefix)\(name)"
         if case .running = states[key] { return }
         Task { await performUpdate(name) }
     }
 
+    /// Updates all listed packages sequentially.
     func updateAll(_ names: [String]) async {
         guard !names.isEmpty else {
             onLog("No packages to update.")
@@ -71,8 +85,12 @@ final class InstallCoordinator: ObservableObject {
         onLog("Update batch completed (\(names.count) package(s)).")
     }
 
+    // MARK: - Update pipeline
+
+    /// Runs the full update flow for a single package: direct → admin → usermode fallback.
     private func performUpdate(_ name: String) async {
         let key = "\(Self.updatePrefix)\(name)"
+        // --- Locate tlmgr ---
         guard let tlmgr = TeXEnvironment.locateExecutable("tlmgr") else {
             states[key] = .failed(message: "tlmgr not found")
             return
@@ -80,7 +98,9 @@ final class InstallCoordinator: ObservableObject {
         states[key] = .running(phase: "Updating…")
         installLog.record("UPDATE START \(name)")
         onLog("Updating \(name)…")
+        // --- Try direct update ---
         var output = await ProcessRunner.run(tlmgr, ["update", name])
+        // --- Permission failure → try admin elevation ---
         // Falha por permissão na árvore de sistema: tenta elevar privilégios
         // (diálogo de senha do macOS); se o usuário cancelar, oferece o comando sudo.
         if !output.ok, Self.looksLikePermission(output.log) {
@@ -107,9 +127,11 @@ final class InstallCoordinator: ObservableObject {
             states[key] = .failed(message: admin.log.last ?? "admin update failed for \(name)")
             return
         }
+        // --- Non-permission failure → try --usermode fallback ---
         if !output.ok {
             output = await ProcessRunner.run(tlmgr, ["--usermode", "update", name])
         }
+        // --- Final result ---
         for line in output.log { onLog("  \(line)") }
         if output.ok {
             onLog("✓ \(name) updated")
@@ -135,12 +157,14 @@ final class InstallCoordinator: ObservableObject {
 
         var removed = false
         var permissionBlocked = false
+        // --- Try tlmgr remove ---
         if let tlmgr = TeXEnvironment.locateExecutable("tlmgr") {
             let output = await ProcessRunner.run(tlmgr, ["remove", name])
             for line in output.log { onLog("  \(line)") }
             if output.ok {
                 removed = true
             } else if Self.looksLikePermission(output.log) {
+                // --- Permission blocked → admin elevation ---
                 // Árvore de sistema: elevar privilégios; se cancelar ou errar a
                 // senha, oferecer sudo — NÃO apagar cópia do usuário e fingir sucesso.
                 permissionBlocked = true
@@ -167,6 +191,7 @@ final class InstallCoordinator: ObservableObject {
                 removed = usermode.ok
             }
         }
+        // --- Fallback: manual CTAN uninstall from user tree ---
         if !removed && !permissionBlocked {
             // Fallback: pacote instalado manualmente na árvore do usuário (fluxo CTAN).
             let texmf = (try? await Self.userTexmfPath()) ?? Self.defaultTexmfPath()
@@ -182,6 +207,7 @@ final class InstallCoordinator: ObservableObject {
             }
         }
 
+        // --- Final result ---
         if removed {
             onLog("✓ \(name) removed")
             installLog.record("UNINSTALL OK \(name)")
@@ -199,6 +225,9 @@ final class InstallCoordinator: ObservableObject {
         }
     }
 
+    // MARK: - Install pipeline
+
+    /// Installs all listed packages sequentially, updating state as each completes.
     func installAll(_ items: [(package: PackageInfo, strategy: InstallStrategy)]) async {
         guard !items.isEmpty else {
             onLog("No packages to install.")
@@ -212,6 +241,7 @@ final class InstallCoordinator: ObservableObject {
         onLog("Batch completed (\(items.count) package(s)).")
     }
 
+    /// Dispatches to the appropriate strategy handler (tlmgr / tectonic / CTAN / unavailable).
     private func perform(_ package: PackageInfo, strategy: InstallStrategy) async {
         installLog.record("START \(package.texlivePackage) strategy=\(strategyName(strategy))")
         switch strategy {
@@ -252,6 +282,9 @@ final class InstallCoordinator: ObservableObject {
         }
     }
 
+    // MARK: - tlmgr
+
+    /// Installs a package via tlmgr: user-tree → --usermode → system (with admin fallback).
     private func runTlmgr(package: PackageInfo, name: String) async {
         guard let tlmgr = TeXEnvironment.locateExecutable("tlmgr") else {
             finish(package, .failed(message: "tlmgr not found"))
@@ -298,6 +331,9 @@ final class InstallCoordinator: ObservableObject {
         }
     }
 
+    // MARK: - CTAN
+
+    /// Downloads a package tarball from CTAN, extracts it to the user tree, and verifies.
     private func runCTAN(package: PackageInfo, name: String, kind: TeXElementKind) async {
         states[package.id] = .running(phase: "Locating…")
         onLog("Locating \(name) on CTAN…")
@@ -351,6 +387,9 @@ final class InstallCoordinator: ObservableObject {
         }
     }
 
+    // MARK: - Verification
+
+    /// Confirms a package is installed by probing kpsewhich and the file system.
     private func verify(_ package: PackageInfo, name: String, base: URL?) async {
         states[package.id] = .running(phase: "Verifying…")
         onLog("Verifying \(name)…")
@@ -393,8 +432,11 @@ final class InstallCoordinator: ObservableObject {
         }
     }
 
+    // MARK: - Helpers
+
     private nonisolated static let fontExtensions = ["otf", "ttf", "tfm"]
 
+    /// Maps a TeXElementKind to the expected file extension for kpsewhich probing.
     private nonisolated static func ext(for kind: TeXElementKind) -> String? {
         switch kind {
         case .documentClass: return "cls"
@@ -404,6 +446,7 @@ final class InstallCoordinator: ObservableObject {
         }
     }
 
+    /// Promotes the sole child directory up one level (common CTAN tarball layout).
     private nonisolated static func flattenSingleChild(at target: URL) {
         let fm = FileManager.default
         guard let children = try? fm.contentsOfDirectory(atPath: target.path), children.count == 1 else { return }
@@ -416,16 +459,19 @@ final class InstallCoordinator: ObservableObject {
         try? fm.removeItem(at: only)
     }
 
+    /// Default user texmf path: ~/Library/texmf.
     private nonisolated static func defaultTexmfPath() -> URL {
         FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/texmf")
     }
 
+    /// Returns true if tlmgr lives inside the user's own TeX Live tree (not system-installed).
     private nonisolated static func usesUserTeXTree() -> Bool {
         guard let tlmgr = TeXEnvironment.locateExecutable("tlmgr") else { return false }
         let home = FileManager.default.homeDirectoryForCurrentUser.path
         return tlmgr.hasPrefix(home + "/") && tlmgr.contains("/texlive/")
     }
 
+    /// Scans a directory tree for recognized TeX artifacts (.sty, .cls, .dtx, etc.).
     private nonisolated static func hasArtifact(_ base: URL) -> Bool {
         let recognized: Set<String> = ["sty", "cls", "dtx", "ins", "bbx", "cbx", "bst", "bib"]
         guard let enumerator = FileManager.default.enumerator(at: base, includingPropertiesForKeys: nil) else { return false }
@@ -474,6 +520,7 @@ final class InstallCoordinator: ObservableObject {
         return false
     }
 
+    /// Resolves the writable user texmf path (TEXMFHOME > TEXMFLOCAL > ~/Library/texmf).
     private nonisolated static func userTexmfPath() async throws -> URL {
         let home = FileManager.default.homeDirectoryForCurrentUser
         var writableFallback: URL?
@@ -493,11 +540,13 @@ final class InstallCoordinator: ObservableObject {
         return home.appendingPathComponent("Library/texmf")
     }
 
+    /// Runs mktexlsr to refresh the filename database after file-system changes.
     private nonisolated static func refreshFilenameDatabase(for texmf: URL) async {
         guard let mktexlsr = TeXEnvironment.locateExecutable("mktexlsr") else { return }
         _ = await ProcessRunner.run(mktexlsr, [texmf.path])
     }
 
+    /// Heuristic check: does the output indicate a permission / read-only error?
     private nonisolated static func looksLikePermission(_ lines: [String]) -> Bool {
         // Padrões específicos de erro de permissão do tlmgr/POSIX — evita
         // falsos positivos com palavras soltas ("sudoers", "permissioned").
@@ -537,6 +586,9 @@ final class InstallCoordinator: ObservableObject {
         result.status == NativeAdminRunner.authorizationFailedStatus
     }
 
+    // MARK: - Bootstrap
+
+    /// Downloads and installs a minimal TeX Live scheme (tlmgr + kpsewhich + basic engines) via admin elevation.
     private func runBootstrap() async {
         states[Self.bootstrapKey] = .running(phase: "Preparing…")
         installLog.record("START TeX Live bootstrap (install-tl basic scheme)")

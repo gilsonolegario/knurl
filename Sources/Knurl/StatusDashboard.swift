@@ -1,6 +1,9 @@
+// StatusDashboard.swift — Overview dashboard showing distribution, engines, tools, disk, and package summary cards.
+
 import SwiftUI
 import KnurlCore
 
+/// Status tab: overview of the detected TeX environment, available tools, and package counts.
 struct StatusDashboard: View {
     @ObservedObject var vm: ReportViewModel
     var onSwitchToPackages: (() -> Void)? = nil
@@ -105,6 +108,7 @@ struct StatusDashboard: View {
         }
     }
 
+    /// Displays a single engine row with a checkmark or cross icon.
     private func engineRow(name: String, available: Bool) -> some View {
         HStack(spacing: 8) {
             Image(systemName: available ? "checkmark.circle.fill" : "xmark.circle")
@@ -146,6 +150,7 @@ struct StatusDashboard: View {
         }
     }
 
+    /// Full-width tool row with status chip (used for tlmgr).
     private func toolRow(name: String, available: Bool, primary: Bool = false) -> some View {
         HStack(spacing: 8) {
             Image(systemName: available ? "checkmark.circle.fill" : "xmark.circle")
@@ -167,6 +172,7 @@ struct StatusDashboard: View {
         }
     }
 
+    /// Compact pill badge for a secondary tool (kpsewhich, biber, etc.).
     private func toolPill(name: String, available: Bool) -> some View {
         HStack(spacing: 4) {
             Circle()
@@ -206,6 +212,7 @@ struct StatusDashboard: View {
         }
     }
 
+    /// Single stat pill inside the packages summary card.
     private func summaryPill(label: String, value: Int, color: Color) -> some View {
         VStack(spacing: 2) {
             Text("\(value)")

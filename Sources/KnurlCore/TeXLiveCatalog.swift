@@ -1,3 +1,5 @@
+// TeXLiveCatalog.swift — Indexes texlive.tlpdb to map filenames to their owning TeX Live packages.
+
 import Foundation
 
 /// Índice do catálogo do TeX Live (texlive.tlpdb): mapeia nome de arquivo → pacote dono.
@@ -12,6 +14,7 @@ public struct TeXLiveCatalog: Sendable {
         self.cache = LockedDict()
     }
 
+    /// Looks up the TeX Live package that owns a given element name and kind.
     public func owner(for name: String, kind: TeXElementKind) -> String? {
         let key = "\(kind.rawValue)|\(name.lowercased())"
         if let cached = cache.value(forKey: key) { return cached }
@@ -29,6 +32,7 @@ public struct TeXLiveCatalog: Sendable {
         index[fileName.lowercased()]
     }
 
+    /// Creates a catalog backed by the lazily-built shared index.
     public static func makeDefault() -> TeXLiveCatalog {
         TeXLiveCatalog(index: SharedIndex.shared.value())
     }
@@ -45,6 +49,7 @@ public struct TeXLiveCatalog: Sendable {
         }
     }
 
+    /// Parses texlive.tlpdb into a filename→package mapping. Only `run` file lists are indexed.
     private static func buildIndex() -> [String: String] {
         guard let path = tlpdbPath() else { return [:] }
         guard let text = try? String(contentsOfFile: path, encoding: .utf8) else { return [:] }
@@ -76,6 +81,7 @@ public struct TeXLiveCatalog: Sendable {
         return index
     }
 
+    /// Locates texlive.tlpdb by probing kpsewhich, tlmgr path, and ~/texlive dirs.
     private static func tlpdbPath() -> String? {
         let fm = FileManager.default
         let home = fm.homeDirectoryForCurrentUser
@@ -113,6 +119,7 @@ public struct TeXLiveCatalog: Sendable {
         return nil
     }
 
+    /// Thread-safe optional-value dictionary for the per-instance query cache.
     private final class LockedDict: @unchecked Sendable {
         private var storage: [String: String?] = [:]
         private let lock = NSLock()
@@ -120,6 +127,7 @@ public struct TeXLiveCatalog: Sendable {
         func set(_ value: String?, forKey key: String) { lock.lock(); defer { lock.unlock() }; storage[key] = value }
     }
 
+    /// Lazily-built, process-wide shared index. Thread-safe via NSLock.
     private final class SharedIndex: @unchecked Sendable {
         static let shared = SharedIndex()
         private let lock = NSLock()

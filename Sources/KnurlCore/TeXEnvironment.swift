@@ -1,5 +1,8 @@
+// TeXEnvironment.swift — Probes the system for available TeX tools and queries kpsewhich for package status.
+
 import Foundation
 
+/// Checks which TeX tools are installed and queries kpsewhich for package availability.
 public struct TeXEnvironment: Sendable {
     private let lookup: @Sendable (String) -> Bool
     private let kpsewhich: @Sendable (String, TeXElementKind) -> Bool
@@ -10,6 +13,7 @@ public struct TeXEnvironment: Sendable {
         self.kpsewhich = kpsewhich
     }
 
+    /// Creates a default environment that uses real PATH lookups and kpsewhich execution.
     public static func makeDefault() -> TeXEnvironment {
         TeXEnvironment(
             lookup: { name in commandExists(name) },
@@ -20,6 +24,7 @@ public struct TeXEnvironment: Sendable {
         )
     }
 
+    /// Snapshot of which TeX tools are currently available on the system.
     public var info: EnvironmentInfo {
         EnvironmentInfo(
             tlmgr: lookup("tlmgr"),
@@ -34,12 +39,14 @@ public struct TeXEnvironment: Sendable {
         )
     }
 
+    /// Returns the installation status for a mapped element: installed, missing, or unknown.
     public func status(for element: TeXElement, mapped: Bool) -> PackageStatus {
         guard mapped else { return .unmapped }
         guard lookup("kpsewhich") else { return .unknown }
         return kpsewhich(element.value, element.kind) ? .installed : .missing
     }
 
+    /// Returns the installation status for a TeX engine executable.
     public func engineStatus(for executable: String) -> PackageStatus {
         if lookup(executable) { return .installed }
         if lookup("kpsewhich") || lookup("tlmgr") { return .missing }
@@ -73,6 +80,7 @@ public struct TeXEnvironment: Sendable {
         return nil
     }
 
+    /// Searches PATH directories for the named executable.
     private static func shellPathLookup(_ name: String) -> String? {
         guard let path = ProcessInfo.processInfo.environment["PATH"] else { return nil }
         let fm = FileManager.default
@@ -88,6 +96,7 @@ private func commandExists(_ name: String) -> Bool {
     TeXEnvironment.locateExecutable(name) != nil
 }
 
+/// Runs kpsewhich to check whether a package file exists in the TeX tree.
 private func runKpsewhich(_ executable: String, _ package: String, kind: TeXElementKind) -> Bool {
     let suffix: String
     switch kind {

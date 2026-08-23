@@ -1,3 +1,5 @@
+// TeXLiveFileSearch.swift — Last-resort package lookup via `tlmgr search --global --file`.
+
 import Foundation
 
 /// Último recurso de mapeamento: pergunta ao banco do TeX Live
@@ -6,7 +8,7 @@ import Foundation
 /// pacote tlmgr e o catálogo local está desatualizado.
 public enum TeXLiveFileSearch {
 
-    /// Retorna o nome do pacote tlmgr dono do arquivo, ou nil se não achar.
+    /// Returns the name of the TeX Live package that provides the given file, or nil.
     public static func owner(ofFile name: String, kind: TeXElementKind) async -> String? {
         guard let tlmgr = TeXEnvironment.locateExecutable("tlmgr") else { return nil }
         switch kind {

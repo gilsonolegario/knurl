@@ -1,3 +1,5 @@
+// UpdatesView.swift — Lists pending tlmgr updates and allows updating packages individually or all at once.
+
 import SwiftUI
 import KnurlCore
 
@@ -25,6 +27,9 @@ struct UpdatesView: View {
         .task { await refresh() }
     }
 
+    // MARK: - Sections
+
+    /// "Check for updates" and "Update all" buttons.
     private var actionRow: some View {
         HStack(spacing: 10) {
             Button {
@@ -59,6 +64,7 @@ struct UpdatesView: View {
         }
     }
 
+    /// Renders the table of pending updates or the current state message.
     @ViewBuilder
     private var content: some View {
         if !environment.tlmgr {
@@ -88,6 +94,7 @@ struct UpdatesView: View {
         }
     }
 
+    /// Per-package action cell: Update / running / updated / failed+retry / copy-command.
     @ViewBuilder
     private func updateCell(for name: String) -> some View {
         switch coordinator.states["\(InstallCoordinator.updatePrefix)\(name)"] ?? .idle {
@@ -130,6 +137,7 @@ struct UpdatesView: View {
         }
     }
 
+    /// Queries tlmgr for pending updates and populates `pending`.
     private func refresh() async {
         guard let tlmgr = TeXEnvironment.locateExecutable("tlmgr") else { return }
         isLoading = true

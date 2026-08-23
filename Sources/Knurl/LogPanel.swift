@@ -1,6 +1,9 @@
+// LogPanel.swift — Collapsible log panel with header, live indicator, copy button, and persistent-log reveal.
+
 import SwiftUI
 import KnurlCore
 
+/// Expandable log panel that shows installation output lines with copy and reveal-in-Finder actions.
 public struct LogPanel: View {
     let lines: [String]
     let expanded: Bool
@@ -18,6 +21,7 @@ public struct LogPanel: View {
         }
     }
 
+    /// Header row with line count, live indicator, copy, and reveal buttons.
     private var header: some View {
         HStack(spacing: 6) {
             Button(action: onToggle) {
@@ -74,6 +78,7 @@ public struct LogPanel: View {
         .padding(.bottom, 6)
     }
 
+    /// Monospaced scrollable terminal view with auto-scroll when live.
     private var terminal: some View {
         ScrollViewReader { proxy in
             ScrollView {

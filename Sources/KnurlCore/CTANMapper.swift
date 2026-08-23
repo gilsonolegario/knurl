@@ -1,14 +1,21 @@
+// CTANMapper.swift — Resolves TeX package names to their canonical CTAN names via the CTAN JSON API.
+
 import Foundation
 
+/// Protocol for resolving a TeX element name to its CTAN match.
 public protocol CTANMapping: Sendable {
     func resolve(_ name: String) async throws -> CTANMatch
 }
 
+/// Result of a CTAN name resolution attempt.
 public enum CTANMatch: Equatable, Sendable {
+    /// Successfully resolved to a canonical CTAN package name.
     case matched(package: String)
+    /// No matching package found on CTAN (or network error).
     case unknown
 }
 
+/// Resolves TeX package names to canonical CTAN names with in-memory caching.
 public struct CTANMapper: Sendable {
     private struct Payload: Decodable {
         let name: String?
@@ -16,6 +23,7 @@ public struct CTANMapper: Sendable {
 
     private let session: URLSession
     private let cache: LockedDict
+    /// Optional callback invoked on each resolution attempt (for UI progress).
     private let onResolve: (@Sendable (String) -> Void)?
 
     public init(session: URLSession = .shared, cache: [String: CTANMatch] = [:], onResolve: (@Sendable (String) -> Void)? = nil) {
@@ -24,6 +32,7 @@ public struct CTANMapper: Sendable {
         self.onResolve = onResolve
     }
 
+    /// Resolves a package name against CTAN. Returns cached results; network timeout is 10s.
     public func resolve(_ name: String) async throws -> CTANMatch {
         let key = name.lowercased()
         if let cached = cache.value(forKey: key) { return cached }
@@ -47,6 +56,7 @@ public struct CTANMapper: Sendable {
         }
     }
 
+    /// Thread-safe dictionary used as the in-memory cache.
     private final class LockedDict: @unchecked Sendable {
         private var storage: [String: CTANMatch]
         private let lock = NSLock()

@@ -1,3 +1,5 @@
+// ActionCells.swift — Stateless namespace that renders per-row action cells (install / CTAN / copy-command) for the package table.
+
 import SwiftUI
 import KnurlCore
 
@@ -5,6 +7,8 @@ import KnurlCore
 /// Extraído de ContentView (Task 5 da UI rewrite) — sem acoplamento ao view model:
 /// recebe o dicionário de estados do coordinator e callbacks de ação.
 enum ActionCells {
+
+    // MARK: - Public API
     @MainActor
     @ViewBuilder
     static func actionCell(
@@ -77,6 +81,9 @@ enum ActionCells {
         }
     }
 
+    // MARK: - Private helpers
+
+    /// Resolves the install strategy for a package via InstallPlanner.
     private static func strategy(for package: PackageInfo, environment: EnvironmentInfo) -> InstallStrategy {
         InstallPlanner.plan(for: package.texlivePackage, kind: package.element.kind, environment: environment)
     }

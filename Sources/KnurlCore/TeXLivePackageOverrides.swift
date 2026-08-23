@@ -1,3 +1,5 @@
+// TeXLivePackageOverrides.swift — Offline heuristic mapping from \usepackage/\documentclass names to TeX Live packages.
+
 import Foundation
 
 /// Heuristic mapping from `\usepackage` / `\documentclass` names
@@ -6,6 +8,7 @@ import Foundation
 /// Source of truth for CTAN→TL: https://tug.org/~mseven/ctan-to-tl.tsv
 /// Only entries where CTAN name ≠ TL name are listed.
 public enum TeXLivePackageOverrides {
+    /// Maps document class names to their owning TeX Live package.
     public static let documentClass: [String: String] = [
         "book": "latex",
         "article": "latex",
@@ -13,6 +16,7 @@ public enum TeXLivePackageOverrides {
         "letter": "latex",
     ]
 
+    /// Maps `\usepackage` / `\RequirePackage` names to their TeX Live package.
     public static let usepackage: [String: String] = [
         // MARK: - LaTeX core (part of `latex` distribution)
         "fontenc": "latex",
@@ -149,6 +153,7 @@ public enum TeXLivePackageOverrides {
         "mathrfs": "jknapltx",
     ]
 
+    /// Returns the TeX Live package name for an element, or nil if no override exists.
     public static func texlivePackage(for element: TeXElement) -> String? {
         let key = element.value.lowercased()
         switch element.kind {

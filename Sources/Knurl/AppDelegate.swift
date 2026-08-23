@@ -1,3 +1,5 @@
+// AppDelegate.swift — Minimal NSApplicationDelegate that forwards open-URL events to the SwiftUI app layer.
+
 import AppKit
 
 final class AppDelegate: NSObject, NSApplicationDelegate {

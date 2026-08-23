@@ -1,3 +1,5 @@
+// TeXUpdater.swift — Detects pending TeX Live updates by parsing `tlmgr update --list` output.
+
 import Foundation
 
 /// Detecção de atualizações pendentes do TeX Live via `tlmgr update --list`.

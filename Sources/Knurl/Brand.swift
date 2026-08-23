@@ -1,5 +1,9 @@
+// Brand.swift — Centralized color palette, corner-radius tokens, and reusable button styles for the app.
+
 import SwiftUI
 
+/// Unified design-system palette: surface, accent, text, semantic colors, and corner radii.
+/// All colors are adaptive (dark/light) where appropriate.
 @MainActor
 enum Brand {
     // MARK: - Surface Colors (Adaptive)
@@ -78,6 +82,8 @@ enum Brand {
 
 // MARK: - Color Adapter
 
+/// Resolves a `Color` that switches between dark and light variants
+/// based on the current system appearance.
 extension Color {
     @MainActor
     static func adaptive(dark: Color, light: Color) -> Color {
@@ -88,6 +94,7 @@ extension Color {
 
 // MARK: - Button Styles
 
+/// Standard app-wide button modifiers: `.appProminent()` and `.appCapsule()`.
 extension View {
     func appProminent() -> some View {
         self

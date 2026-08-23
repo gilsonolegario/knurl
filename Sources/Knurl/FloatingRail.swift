@@ -1,5 +1,8 @@
+// FloatingRail.swift — Vertical sidebar with icon-only navigation buttons and hover tooltips.
+
 import SwiftUI
 
+/// Navigation tabs exposed by the floating sidebar rail.
 enum RailItem: String, CaseIterable {
     case status
     case packages
@@ -35,6 +38,7 @@ enum RailItem: String, CaseIterable {
     }
 }
 
+/// Floating vertical sidebar that renders `RailItem` buttons with a hover label.
 struct FloatingRail: View {
     @Binding var selectedTab: RailItem
 
@@ -76,6 +80,7 @@ struct FloatingRail: View {
 
 // MARK: - RailButton
 
+/// Single rail button with selected highlight and a trailing hover label.
 struct RailButton: View {
     let item: RailItem
     let isSelected: Bool

@@ -1,8 +1,12 @@
+// ContentView.swift — Root view of the app: manages tabs, drag-and-drop, and wires the report model to the UI.
+
 import SwiftUI
 import KnurlCore
 
 // MARK: - Focused Values
 
+/// Holds the current TeX report and a save callback, propagated via `FocusedValues`
+/// so menu-bar commands can access them without direct child references.
 struct ExportActions {
     let report: TeXReport?
     let save: (String, String) -> Void
@@ -21,6 +25,7 @@ private struct ExportActionsKey: FocusedValueKey {
 
 // MARK: - Content View
 
+/// Main content view: sidebar rail, tab routing, drop zone, report table, and log tail.
 struct ContentView: View {
     @StateObject private var vm = ReportViewModel()
     @StateObject private var coordinator: InstallCoordinator
@@ -80,6 +85,7 @@ struct ContentView: View {
 
     // MARK: - Background Layers
 
+    /// Composites the translucent window background: blur, warm veil, ambient glow, and film grain.
     private var backgroundLayers: some View {
         ZStack {
             VisualEffectBackground()
@@ -110,6 +116,7 @@ struct ContentView: View {
 
     // MARK: - Content Area
 
+    /// Routes to the active tab view and hosts the global drop target.
     private var contentArea: some View {
         VStack(spacing: 0) {
             switch selectedTab {

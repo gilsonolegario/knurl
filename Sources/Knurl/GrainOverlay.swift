@@ -1,5 +1,8 @@
+// GrainOverlay.swift — Procedurally generated film-grain texture overlaid on the window background.
+
 import SwiftUI
 
+/// Renders a tiling noise texture for a subtle film-grain effect.
 struct GrainOverlay: View {
     var opacity: Double = 0.04
 
@@ -19,6 +22,7 @@ struct GrainOverlay: View {
         .task { noiseImage = Self.generateNoise(width: 256, height: 256) }
     }
 
+    /// Generates a small RGBA noise bitmap and returns it as an NSImage.
     private static func generateNoise(width: Int, height: Int) -> NSImage {
         let bitmapRep = NSBitmapImageRep(
             bitmapDataPlanes: nil,

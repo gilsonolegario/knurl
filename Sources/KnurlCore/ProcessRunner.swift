@@ -1,6 +1,10 @@
+// ProcessRunner.swift — Async wrapper around Foundation.Process with timeout, stdin, and streaming capture.
+
 import Foundation
 
+/// Runs external processes asynchronously with timeout protection and full stream capture.
 public enum ProcessRunner {
+    /// The captured output of a completed process.
     public struct Result: Sendable, Equatable {
         public let status: Int32
         public let output: String
@@ -12,8 +16,10 @@ public enum ProcessRunner {
             self.error = error
         }
 
+        /// True when the process exited with status 0.
         public var ok: Bool { status == 0 }
 
+        /// stdout and stderr merged and split into individual lines.
         public var log: [String] {
             (output + error).split(separator: "\n").map(String.init)
         }
@@ -26,11 +32,14 @@ public enum ProcessRunner {
         let data: Data
     }
 
+    /// Boxed FileHandle to satisfy Sendable across task boundaries.
     private final class HandleBox: @unchecked Sendable {
         let handle: FileHandle
         init(_ handle: FileHandle) { self.handle = handle }
     }
 
+    /// Runs an executable with arguments. stdin receives EOF unless `input` is provided.
+    /// Process is killed (SIGTERM → SIGKILL) after `timeout` seconds.
     public static func run(
         _ executable: String,
         _ arguments: [String],

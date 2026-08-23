@@ -1,7 +1,11 @@
+// CompileDetector.swift — Detects missing packages by attempting a trial compile of the project.
+
 import Foundation
 
+/// A package that was not found during a trial compilation attempt.
 public struct CompileMissing: Codable, Sendable, Equatable {
     public let fileName: String
+    /// TeX Live package name that is expected to provide this file.
     public let packageName: String
     public let kind: TeXElementKind
 
@@ -16,6 +20,7 @@ public enum CompileDetectionError: Error, Sendable, Equatable {
     case noEngineInstalled
 }
 
+/// Runs a trial TeX compile and parses the log for "File not found" errors.
 public struct CompileDetector: Sendable {
     public typealias Runner = @Sendable (String, [String], URL?) async -> ProcessRunner.Result
     public typealias EngineCheck = @Sendable (String) -> Bool
@@ -35,6 +40,7 @@ public struct CompileDetector: Sendable {
         self.catalog = catalog
     }
 
+    /// Compiles the project's main `.tex` file and returns packages missing from the log.
     public func detectMissingPackages(at projectDir: URL) async throws -> [CompileMissing] {
         guard let engine = installedEngine(for: projectDir) else { throw CompileDetectionError.noEngineInstalled }
         guard let main = Self.findMainTex(in: projectDir) else { return [] }
@@ -54,9 +60,8 @@ public struct CompileDetector: Sendable {
             .sorted { $0.packageName.localizedCaseInsensitiveCompare($1.packageName) == .orderedAscending }
     }
 
+    /// Picks the best available engine, preferring xelatex/lualatex for fontspec projects.
     private func installedEngine(for projectDir: URL) -> String? {
-        // Projetos com fontspec/fontes não compilam com pdflatex — preferir
-        // xelatex/lualatex para evitar falsos "File not found" no log.
         let needsUnicode = usesUnicodeEngine(in: projectDir)
         let preference = needsUnicode
             ? ["xelatex", "lualatex", "pdflatex"]
@@ -67,6 +72,7 @@ public struct CompileDetector: Sendable {
         return nil
     }
 
+    /// Scans `.tex` files in the project root for `fontspec` or `\set*font` commands.
     private func usesUnicodeEngine(in projectDir: URL) -> Bool {
         let files = (try? FileManager.default.contentsOfDirectory(at: projectDir, includingPropertiesForKeys: nil)) ?? []
         let fontPattern = #"\\(?:setmainfont|setmathfont|setsansfont|setmonofont)"#
@@ -79,6 +85,7 @@ public struct CompileDetector: Sendable {
         return false
     }
 
+    /// Maps a missing filename to a `CompileMissing` using catalog + overrides.
     private func mapFile(_ fileName: String) -> CompileMissing {
         let base = (fileName as NSString).deletingPathExtension
         let ext = (fileName as NSString).pathExtension.lowercased()
@@ -91,6 +98,7 @@ public struct CompileDetector: Sendable {
         return CompileMissing(fileName: fileName, packageName: package, kind: kind)
     }
 
+    /// Finds the main `.tex` file: first by `\documentclass`, then by alphabetical order.
     static func findMainTex(in dir: URL) -> URL? {
         let files = (try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil)) ?? []
         let texFiles = files
@@ -105,9 +113,11 @@ public struct CompileDetector: Sendable {
     }
 }
 
+/// Parses TeX compilation logs to extract filenames from "File not found" errors.
 public enum MissingFileParser {
     private static let packageExtensions: Set<String> = ["sty", "cls", "bbx", "cbx", "bst"]
 
+    /// Returns deduplicated list of filenames from log lines matching `File 'X' not found`.
     public static func parse(log: String) -> [String] {
         let pattern = #"File [`']([^`']+?)['`] not found"#
         guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }

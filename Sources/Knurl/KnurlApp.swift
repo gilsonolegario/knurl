@@ -1,7 +1,10 @@
+// KnurlApp.swift — App entry point: window configuration, menu commands, and icon setup.
+
 import SwiftUI
 import AppKit
 import KnurlCore
 
+/// Main SwiftUI app definition — configures the window, menus, and the AppDelegate adaptor.
 @main
 struct KnurlApp: App {
     @FocusedValue(\.exportActions) private var exportActions
@@ -52,6 +55,7 @@ struct KnurlApp: App {
         }
     }
 
+    /// Configures the main window: transparent titlebar, no resize, movable by background.
     private func configureWindow() {
         guard let window = NSApplication.shared.keyWindow ?? NSApp.mainWindow else { return }
 
@@ -67,6 +71,7 @@ struct KnurlApp: App {
         window.styleMask.remove(.resizable)
     }
 
+    /// Loads the custom app icon from the module bundle.
     private static func makeAppIcon() -> NSImage {
         guard let url = Bundle.module.url(forResource: "Icon", withExtension: "png"),
               let nsImage = NSImage(contentsOf: url) else { return NSImage() }

@@ -1,3 +1,5 @@
+// InstallLog.swift — Persistent append-only log of package install actions with ISO 8601 timestamps.
+
 import Foundation
 
 /// Registro persistente das instalações de pacotes.

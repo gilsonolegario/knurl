@@ -1,5 +1,8 @@
+// LogTail.swift — Compact read-only log snippet showing the last N lines beneath the packages table.
+
 import SwiftUI
 
+/// Shows the last few log lines as a compact terminal strip.
 struct LogTail: View {
     let lines: [String]
     let tailCount: Int
@@ -14,6 +17,7 @@ struct LogTail: View {
         }
     }
 
+    /// Header row with line count and live indicator (no expand toggle — always compact).
     private var header: some View {
         HStack(spacing: 6) {
             Text("Log")
@@ -45,6 +49,7 @@ struct LogTail: View {
         .padding(.bottom, 6)
     }
 
+    /// Renders the last `tailCount` lines in a monospaced block.
     private var terminal: some View {
         let tail = Array(lines.suffix(tailCount))
         return VStack(alignment: .leading, spacing: 2) {

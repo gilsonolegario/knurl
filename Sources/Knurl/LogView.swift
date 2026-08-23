@@ -1,5 +1,8 @@
+// LogView.swift — Full-height scrollable log view for the Log tab with copy and reveal-in-Finder actions.
+
 import SwiftUI
 
+/// Full log view used in the Log tab: header with line count, copy, and reveal buttons.
 struct LogView: View {
     let lines: [String]
     let isLive: Bool
@@ -12,6 +15,7 @@ struct LogView: View {
         }
     }
 
+    /// Header row with line count, live indicator, copy, and reveal buttons.
     private var header: some View {
         HStack(spacing: 6) {
             Text("Log")
@@ -59,6 +63,7 @@ struct LogView: View {
         .padding(.bottom, 8)
     }
 
+    /// Monospaced scrollable terminal with auto-scroll when live.
     private var terminal: some View {
         ScrollViewReader { proxy in
             ScrollView {
