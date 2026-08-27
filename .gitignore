@@ -8,3 +8,8 @@ Tests/
 docs/
 Sources/Knurl/Resources/Icon_*_backup.png
 .site-worktree/
+
+# local-only session handoff artifacts (never commit)
+.scratch/
+NOTAS_SESSAO.md
+PROXIMA_SESSAO.md
