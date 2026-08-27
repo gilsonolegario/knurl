@@ -1,54 +1,17 @@
-// GrainOverlay.swift — Procedurally generated film-grain texture overlaid on the window background.
+// GrainOverlay.swift — Legacy; Davit-inspired clean background uses system background.
+//
+// This view is now a no-op stub. It remains to preserve imports/call-sites
+// (e.g. ContentView.backgroundLayers) but renders no grain texture. Davit
+// does not use a veil/grain layer; the native system background is sufficient.
 
 import SwiftUI
 
-/// Renders a tiling noise texture for a subtle film-grain effect.
+/// Legacy — Davit-inspired clean background uses system background; this view is no-op.
 struct GrainOverlay: View {
     var opacity: Double = 0.04
 
-    @State private var noiseImage: NSImage?
-
     var body: some View {
-        GeometryReader { geo in
-            if let noiseImage {
-                Image(nsImage: noiseImage)
-                    .resizable()
-                    .opacity(opacity)
-                    .frame(width: geo.size.width, height: geo.size.height)
-                    .clipped()
-            }
-        }
-        .allowsHitTesting(false)
-        .task { noiseImage = Self.generateNoise(width: 256, height: 256) }
-    }
-
-    /// Generates a small RGBA noise bitmap and returns it as an NSImage.
-    private static func generateNoise(width: Int, height: Int) -> NSImage {
-        let bitmapRep = NSBitmapImageRep(
-            bitmapDataPlanes: nil,
-            pixelsWide: width,
-            pixelsHigh: height,
-            bitsPerSample: 8,
-            samplesPerPixel: 4,
-            hasAlpha: true,
-            isPlanar: false,
-            colorSpaceName: .deviceRGB,
-            bytesPerRow: width * 4,
-            bitsPerPixel: 32
-        )!
-
-        let data = bitmapRep.bitmapData!
-        for i in 0..<(width * height * 4) {
-            data[i] = UInt8.random(in: 50...200)
-        }
-        data.withMemoryRebound(to: UInt32.self, capacity: width * height) { ptr in
-            for i in 0..<(width * height) {
-                ptr[i] = (ptr[i] & 0xFFFFFF00) | 0x30
-            }
-        }
-
-        let image = NSImage(size: NSSize(width: width, height: height))
-        image.addRepresentation(bitmapRep)
-        return image
+        Color.clear
+            .allowsHitTesting(false)
     }
 }

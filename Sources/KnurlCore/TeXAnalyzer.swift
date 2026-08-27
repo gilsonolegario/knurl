@@ -70,20 +70,30 @@ public struct TeXAnalyzer: @unchecked Sendable {
             }
         }
 
+        // Helper: recursively collect .tex/.sty under root (Davit-style exhaustive scan).
+        func collectRecursively(at dir: URL, exts: Set<String>) -> [URL] {
+            guard let enumerator = fm.enumerator(at: dir, includingPropertiesForKeys: [.isRegularFileKey], options: [.skipsHiddenFiles]) else { return [] }
+            var out: [URL] = []
+            for case let fileURL as URL in enumerator {
+                guard exts.contains(fileURL.pathExtension.lowercased()) else { continue }
+                // Skip build artefacts
+                if fileURL.path.contains("/.build/") || fileURL.path.contains("/build/") { continue }
+                out.append(fileURL)
+            }
+            return out.sorted { $0.lastPathComponent < $1.lastPathComponent }
+        }
+
         if isDirectory {
-            let all = try fm.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)
-            let texFiles = all.filter { $0.pathExtension == "tex" }.sorted { $0.lastPathComponent < $1.lastPathComponent }
-            let styFiles = all.filter { $0.pathExtension == "sty" }.sorted { $0.lastPathComponent < $1.lastPathComponent }
-            for f in texFiles {
-                try scan(f)
-            }
-            for f in styFiles {
-                try scan(f)
-            }
+            let texFiles = collectRecursively(at: root, exts: ["tex"])
+            let styFiles = collectRecursively(at: root, exts: ["sty"])
+            for f in texFiles { try scan(f) }
+            for f in styFiles { try scan(f) }
         } else {
             try scan(url)
-            let siblings = try? fm.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)
-            for f in (siblings ?? []).filter({ $0.pathExtension == "sty" }).sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
+            // Single-file drop: also parse every local .sty under the same root (recursive),
+            // so that dependencies inside local packages are discovered.
+            let styFiles = collectRecursively(at: root, exts: ["sty"])
+            for f in styFiles where f.standardizedFileURL.path != url.standardizedFileURL.path {
                 try scan(f)
             }
         }
@@ -91,13 +101,21 @@ public struct TeXAnalyzer: @unchecked Sendable {
         return dedupe(TeXProject(rootPath: root.path, files: files, localPackages: localStyNames))
     }
 
-    /// Removes duplicate elements across files (same kind + value), keeping the first occurrence.
+    /// Removes duplicate elements across files, keeping the first occurrence.
+    /// Normaliza `value` para lowercased e agrupa `usepackage`/`requirePackage` sob a
+    /// mesma chave — evita \usepackage{foo} + \RequirePackage{foo} gerarem duas
+    /// notificações — mas mantém `minted`/`bibliography`/`font` separados.
     private func dedupe(_ project: TeXProject) -> TeXProject {
         var seen = Set<String>()
         var files = project.files
         for i in files.indices {
             files[i].elements = files[i].elements.filter { el in
-                let key = "\(el.kind.rawValue)\u{0}\(el.value)"
+                let normalizedKind: String
+                switch el.kind {
+                case .usepackage, .requirePackage: normalizedKind = "package"
+                default: normalizedKind = el.kind.rawValue
+                }
+                let key = "\(normalizedKind)\u{0}\(el.value.lowercased())"
                 return seen.insert(key).inserted
             }
         }

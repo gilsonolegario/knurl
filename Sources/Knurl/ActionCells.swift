@@ -1,4 +1,6 @@
 // ActionCells.swift — Stateless namespace that renders per-row action cells (install / CTAN / copy-command) for the package table.
+//
+// Davit clean palette: secondary fills, semantic green/orange, hitAreaRect on every Button.
 
 import SwiftUI
 import KnurlCore
@@ -9,6 +11,7 @@ import KnurlCore
 enum ActionCells {
 
     // MARK: - Public API
+
     @MainActor
     @ViewBuilder
     static func actionCell(
@@ -32,15 +35,15 @@ enum ActionCells {
                             .font(.caption)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 3)
-                            .background(Capsule().fill(Brand.cardFill))
-                            .foregroundStyle(Brand.textSecondary)
+                            .background(Capsule().fill(Color.secondary.opacity(0.12)))
+                            .foregroundStyle(.secondary)
                         ctanButton(package, onCTAN: onCTAN)
                     }
                 case .unavailable:
                     HStack(spacing: 6) {
                         Text(package.suggestedCommand ?? "—")
                             .font(.caption)
-                            .foregroundStyle(Brand.textSecondary)
+                            .foregroundStyle(.secondary)
                         ctanButton(package, onCTAN: onCTAN)
                     }
                 }
@@ -49,7 +52,7 @@ enum ActionCells {
                     ProgressView().controlSize(.mini)
                     Text(phase)
                         .font(.caption)
-                        .foregroundStyle(Brand.textSecondary)
+                        .foregroundStyle(.secondary)
                 }
             case .succeeded:
                 installedLabel
@@ -57,7 +60,7 @@ enum ActionCells {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(message)
                         .font(.caption)
-                        .foregroundStyle(Brand.red)
+                        .foregroundStyle(.red)
                         .lineLimit(1)
                     installButton(package, strategy: strategy, onInstall: onInstall)
                 }
@@ -96,9 +99,12 @@ enum ActionCells {
     ) -> some View {
         Button { onInstall(package, strategy) } label: {
             Label("Install", systemImage: "arrow.down.circle.fill")
+                .hitAreaRect()
         }
-        .appProminent()
+        .buttonStyle(.borderedProminent)
+        .tint(.green)
         .controlSize(.small)
+        .hitAreaRect()
     }
 
     @MainActor
@@ -108,9 +114,15 @@ enum ActionCells {
     ) -> some View {
         Button { onCTAN(package) } label: {
             Image(systemName: "arrow.down.circle")
-                .appCapsule()
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Color.secondary.opacity(0.12), in: Capsule())
+                .overlay(Capsule().stroke(Color.primary.opacity(0.08), lineWidth: 1))
+                .hitAreaRect()
         }
         .buttonStyle(.plain)
+        .contentShape(Capsule())
+        .hitAreaRect()
         .help("Download from CTAN")
     }
 
@@ -119,10 +131,10 @@ enum ActionCells {
         HStack(spacing: 4) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.caption)
-                .foregroundStyle(Brand.green)
+                .foregroundStyle(.green)
             Text("installed")
                 .font(.caption)
-                .foregroundStyle(Brand.green)
+                .foregroundStyle(.green)
         }
     }
 
@@ -131,10 +143,10 @@ enum ActionCells {
         HStack(spacing: 4) {
             Image(systemName: "trash.circle")
                 .font(.caption)
-                .foregroundStyle(Brand.textSecondary)
+                .foregroundStyle(.secondary)
             Text("removed")
                 .font(.caption)
-                .foregroundStyle(Brand.textSecondary)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -145,9 +157,15 @@ enum ActionCells {
     ) -> some View {
         Button { onCopy(command) } label: {
             Image(systemName: "doc.on.doc")
-                .appCapsule()
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Color.secondary.opacity(0.12), in: Capsule())
+                .overlay(Capsule().stroke(Color.primary.opacity(0.08), lineWidth: 1))
+                .hitAreaRect()
         }
         .buttonStyle(.plain)
+        .contentShape(Capsule())
+        .hitAreaRect()
         .help("Copy command")
     }
 }

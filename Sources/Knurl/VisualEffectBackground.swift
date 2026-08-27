@@ -1,24 +1,15 @@
-// VisualEffectBackground.swift — NSVisualEffectView wrapper providing the translucent behind-window blur.
+// VisualEffectBackground.swift — Legacy; Davit-inspired clean background uses system background.
+//
+// This view is now a no-op stub. It remains to preserve imports/call-sites
+// (e.g. ContentView.backgroundLayers) but renders no visual effect. Davit's
+// clean native look relies on the system window background, not a custom
+// NSVisualEffectView veil.
 
 import SwiftUI
-import AppKit
 
-/// Wraps `NSVisualEffectView` as a SwiftUI view for the window's translucent background material.
-struct VisualEffectBackground: NSViewRepresentable {
-    var material: NSVisualEffectView.Material = .underWindowBackground
-    var blendingMode: NSVisualEffectView.BlendingMode = .behindWindow
-
-    func makeNSView(context: Context) -> NSVisualEffectView {
-        let view = NSVisualEffectView()
-        view.material = material
-        view.blendingMode = blendingMode
-        view.state = .active
-        view.isEmphasized = true
-        return view
-    }
-
-    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
-        nsView.material = material
-        nsView.blendingMode = blendingMode
+/// Legacy — Davit-inspired clean background uses system background; this view is no-op.
+struct VisualEffectBackground: View {
+    var body: some View {
+        Color.clear
     }
 }

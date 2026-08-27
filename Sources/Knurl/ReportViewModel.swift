@@ -57,12 +57,11 @@ final class ReportViewModel: ObservableObject {
         guard let report else { return [] }
         return report.packages.map { pkg in
             if let override = installOverrides[pkg.id] {
-                var updated = pkg
-                updated = PackageInfo(element: pkg.element, texlivePackage: pkg.texlivePackage,
-                                     status: override, suggestedCommand: pkg.suggestedCommand)
-                return updated
+                PackageInfo(element: pkg.element, texlivePackage: pkg.texlivePackage,
+                            status: override, suggestedCommand: pkg.suggestedCommand)
+            } else {
+                pkg
             }
-            return pkg
         }
     }
 
@@ -87,7 +86,7 @@ final class ReportViewModel: ObservableObject {
         guard let environment = report?.environment else { return [] }
         var seen = Set<String>()
         var result: [(package: PackageInfo, strategy: InstallStrategy)] = []
-        let candidates = (report?.packages ?? []) + (compileMissing ?? [])
+        let candidates = resolvedPackages + (compileMissing ?? [])
         for package in candidates {
             let effective = installOverrides[package.id] ?? package.status
             guard effective == .missing else { continue }

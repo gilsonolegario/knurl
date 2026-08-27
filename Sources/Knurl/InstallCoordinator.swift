@@ -22,6 +22,7 @@ final class InstallCoordinator: ObservableObject {
     // MARK: - State
     static let bootstrapKey = "__bootstrap__"
     static let updatePrefix = "update:"
+    static let selfUpdateKey = "__tlmgr-self__"
     @Published private(set) var states: [String: InstallState] = [:]
     private let installLog = InstallLogWriter()
     private let onLog: (String) -> Void
@@ -85,6 +86,12 @@ final class InstallCoordinator: ObservableObject {
         onLog("Update batch completed (\(names.count) package(s)).")
     }
 
+    /// Triggers a `tlmgr update --self` (mirror / infrastructure update).
+    func updateMirrors() {
+        if case .running = states[Self.selfUpdateKey] { return }
+        Task { await performSelfUpdate() }
+    }
+
     // MARK: - Update pipeline
 
     /// Runs the full update flow for a single package: direct → admin → usermode fallback.
@@ -146,6 +153,107 @@ final class InstallCoordinator: ObservableObject {
             onLog("Error: update failed for \(name)")
             installLog.record("UPDATE FAIL \(name)")
             states[key] = .failed(message: "update failed for \(name)")
+        }
+    }
+
+    // MARK: - Mirrors / tlmgr self-update
+
+    /// Runs `tlmgr update --self` with permission/admin handling.
+    /// Called both by the "Update mirrors" button and automatically when
+    /// an install fails with "tlmgr itself needs to be updated".
+    private func performSelfUpdate() async {
+        guard let tlmgr = TeXEnvironment.locateExecutable("tlmgr") else {
+            states[Self.selfUpdateKey] = .failed(message: "tlmgr not found")
+            return
+        }
+        states[Self.selfUpdateKey] = .running(phase: "Updating tlmgr…")
+        installLog.record("SELF-UPDATE START")
+        onLog("Updating tlmgr itself (tlmgr update --self)…")
+        let (result, logs) = await Self.runSelfUpdate(tlmgr: tlmgr)
+        for line in logs { onLog("  \(line)") }
+        switch result {
+        case .ok:
+            onLog("✓ tlmgr updated")
+            installLog.record("SELF-UPDATE OK")
+            states[Self.selfUpdateKey] = .succeeded
+        case .needsPrivilege(let command):
+            onLog("Permission needed — run in Terminal: \(command)")
+            installLog.record("SELF-UPDATE PRIV")
+            states[Self.selfUpdateKey] = .needsPrivilege(command: command)
+        case .cancelled(let command):
+            onLog("Administrator password not provided — run in Terminal: \(command)")
+            installLog.record("SELF-UPDATE CANCELLED")
+            states[Self.selfUpdateKey] = .needsPrivilege(command: command)
+        case .failed(let message):
+            onLog("Error: tlmgr self-update failed — \(message)")
+            installLog.record("SELF-UPDATE FAIL: \(message)")
+            states[Self.selfUpdateKey] = .failed(message: message)
+        }
+    }
+
+    /// Shared helper that tries `tlmgr update --self` directly, then with admin elevation.
+    /// Returns the result and all log lines to be emitted by the caller on the MainActor.
+    private nonisolated static func runSelfUpdate(tlmgr: String) async -> (SelfUpdateResult, [String]) {
+        var combined: [String] = []
+        let output = await ProcessRunner.run(tlmgr, ["update", "--self"])
+        combined.append(contentsOf: output.log)
+        if output.ok { return (.ok, combined) }
+        if looksLikePermission(output.log) {
+            combined.append("Permission needed — retrying with administrator privileges…")
+            let admin = await runAdmin(tlmgr, ["update", "--self"])
+            combined.append(contentsOf: admin.log)
+            if admin.ok { return (.ok, combined) }
+            if userCancelledAdmin(admin) { return (.cancelled(command: "sudo tlmgr update --self"), combined) }
+            if authorizationFailed(admin) { return (.cancelled(command: "sudo tlmgr update --self"), combined) }
+            if looksLikePermission(admin.log) { return (.needsPrivilege(command: "sudo tlmgr update --self"), combined) }
+            return (.failed(message: admin.log.last ?? "admin update --self failed"), combined)
+        }
+        if looksLikeSelfUpdateRequired(output.log) {
+            return (.failed(message: output.log.last ?? "self-update failed"), combined)
+        }
+        return (.failed(message: output.log.last ?? "self-update failed"), combined)
+    }
+
+    private enum SelfUpdateResult: Equatable {
+        case ok
+        case needsPrivilege(command: String)
+        case cancelled(command: String)
+        case failed(message: String)
+    }
+
+    private nonisolated static func looksLikeSelfUpdateRequired(_ lines: [String]) -> Bool {
+        let joined = lines.joined(separator: "\n").lowercased()
+        return joined.contains("tlmgr itself needs to be updated")
+            || joined.contains("tlmgr update --self")
+            || joined.contains("please do this via")
+    }
+
+    private func ensureSelfUpdated(tlmgr: String) async -> Bool {
+        // If a self-update is already in progress, wait for it.
+        if case .running = states[Self.selfUpdateKey] {
+            // Poll briefly — self-update is single-shot; retry after it finishes.
+            try? await Task.sleep(for: .seconds(0.5))
+        }
+        installLog.record("SELF-UPDATE AUTO-START")
+        onLog("Updating tlmgr itself (tlmgr update --self)…")
+        let (result, logs) = await Self.runSelfUpdate(tlmgr: tlmgr)
+        for line in logs { onLog("  \(line)") }
+        switch result {
+        case .ok:
+            onLog("✓ tlmgr updated — retrying install…")
+            installLog.record("SELF-UPDATE OK (auto)")
+            states[Self.selfUpdateKey] = .succeeded
+            return true
+        case .needsPrivilege(let command), .cancelled(let command):
+            onLog("Permission needed — run in Terminal: \(command)")
+            installLog.record("SELF-UPDATE PRIV (auto)")
+            states[Self.selfUpdateKey] = .needsPrivilege(command: command)
+            return false
+        case .failed(let message):
+            onLog("Error: automatic tlmgr self-update failed — \(message)")
+            installLog.record("SELF-UPDATE FAIL (auto): \(message)")
+            states[Self.selfUpdateKey] = .failed(message: message)
+            return false
         }
     }
 
@@ -285,6 +393,7 @@ final class InstallCoordinator: ObservableObject {
     // MARK: - tlmgr
 
     /// Installs a package via tlmgr: user-tree → --usermode → system (with admin fallback).
+    /// If tlmgr reports "tlmgr itself needs to be updated", runs `tlmgr update --self` first and retries once.
     private func runTlmgr(package: PackageInfo, name: String) async {
         guard let tlmgr = TeXEnvironment.locateExecutable("tlmgr") else {
             finish(package, .failed(message: "tlmgr not found"))
@@ -298,6 +407,24 @@ final class InstallCoordinator: ObservableObject {
             for line in user.log { onLog("  \(line)") }
             if user.ok {
                 await verify(package, name: name, base: nil)
+            } else if Self.looksLikeSelfUpdateRequired(user.log) {
+                onLog("tlmgr itself is outdated — updating tlmgr before retry…")
+                if await ensureSelfUpdated(tlmgr: tlmgr) {
+                    onLog("tlmgr -repository mirror.ctan.org install \(name) (retry)")
+                    let retry = await ProcessRunner.run(tlmgr, repo + ["install", name])
+                    for line in retry.log { onLog("  \(line)") }
+                    if retry.ok {
+                        await verify(package, name: name, base: nil)
+                    } else if Self.looksLikePermission(retry.log) {
+                        let command = "sudo tlmgr -repository https://mirror.ctan.org/systems/texlive/tlnet install \(name)"
+                        onLog("Permission needed — run in Terminal: \(command)")
+                        finish(package, .needsPrivilege(command: command))
+                    } else {
+                        finish(package, .failed(message: "tlmgr failed: \(retry.log.last ?? "unknown error")"))
+                    }
+                } else {
+                    finish(package, .failed(message: "tlmgr needs self-update: run sudo tlmgr update --self"))
+                }
             } else if Self.looksLikePermission(user.log) {
                 let command = "sudo tlmgr -repository https://mirror.ctan.org/systems/texlive/tlnet install \(name)"
                 onLog("Permission needed — run in Terminal: \(command)")
@@ -315,12 +442,56 @@ final class InstallCoordinator: ObservableObject {
         for line in output.log { onLog("  \(line)") }
         if output.ok {
             await verify(package, name: name, base: nil)
+        } else if Self.looksLikeSelfUpdateRequired(output.log) {
+            onLog("tlmgr itself is outdated — updating tlmgr before retry…")
+            if await ensureSelfUpdated(tlmgr: tlmgr) {
+                onLog("tlmgr --usermode install \(name) (retry)")
+                let retry = await ProcessRunner.run(tlmgr, ["--usermode"] + repo + ["install", name])
+                for line in retry.log { onLog("  \(line)") }
+                if retry.ok {
+                    await verify(package, name: name, base: nil)
+                } else {
+                    // Fall through to system install if usermode still fails.
+                    onLog("tlmgr --usermode retry failed; trying without usermode")
+                    let sys = await ProcessRunner.run(tlmgr, repo + ["install", name])
+                    for line in sys.log { onLog("  \(line)") }
+                    if sys.ok {
+                        await verify(package, name: name, base: nil)
+                    } else if Self.looksLikePermission(sys.log) {
+                        let command = "sudo tlmgr -repository https://mirror.ctan.org/systems/texlive/tlnet install \(name)"
+                        onLog("Permission needed — run in Terminal: \(command)")
+                        finish(package, .needsPrivilege(command: command))
+                    } else {
+                        finish(package, .failed(message: "tlmgr failed: \(sys.log.last ?? "unknown error")"))
+                    }
+                }
+            } else {
+                finish(package, .failed(message: "tlmgr needs self-update: run sudo tlmgr update --self"))
+            }
         } else {
             onLog("tlmgr --usermode failed; trying without usermode")
             let sys = await ProcessRunner.run(tlmgr, repo + ["install", name])
             for line in sys.log { onLog("  \(line)") }
             if sys.ok {
                 await verify(package, name: name, base: nil)
+            } else if Self.looksLikeSelfUpdateRequired(sys.log) {
+                onLog("tlmgr itself is outdated — updating tlmgr before retry…")
+                if await ensureSelfUpdated(tlmgr: tlmgr) {
+                    onLog("tlmgr -repository mirror.ctan.org install \(name) (retry)")
+                    let retry = await ProcessRunner.run(tlmgr, repo + ["install", name])
+                    for line in retry.log { onLog("  \(line)") }
+                    if retry.ok {
+                        await verify(package, name: name, base: nil)
+                    } else if Self.looksLikePermission(retry.log) {
+                        let command = "sudo tlmgr -repository https://mirror.ctan.org/systems/texlive/tlnet install \(name)"
+                        onLog("Permission needed — run in Terminal: \(command)")
+                        finish(package, .needsPrivilege(command: command))
+                    } else {
+                        finish(package, .failed(message: "tlmgr failed: \(retry.log.last ?? "unknown error")"))
+                    }
+                } else {
+                    finish(package, .failed(message: "tlmgr needs self-update: run sudo tlmgr update --self"))
+                }
             } else if Self.looksLikePermission(sys.log) {
                 let command = "sudo tlmgr -repository https://mirror.ctan.org/systems/texlive/tlnet install \(name)"
                 onLog("Permission needed — run in Terminal: \(command)")

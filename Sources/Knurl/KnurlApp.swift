@@ -4,6 +4,15 @@ import SwiftUI
 import AppKit
 import KnurlCore
 
+// MARK: - Notifications
+
+extension Notification.Name {
+    /// Posted when the user triggers Refresh (⌘R) from the menu.
+    static let knurlRefresh = Notification.Name("knurl.refresh")
+    /// Posted when the user triggers Search (⌘K) from the menu.
+    static let knurlSearch = Notification.Name("knurl.search")
+}
+
 /// Main SwiftUI app definition — configures the window, menus, and the AppDelegate adaptor.
 @main
 struct KnurlApp: App {
@@ -21,21 +30,32 @@ struct KnurlApp: App {
     }
 
     var body: some Scene {
-        WindowGroup {
-            ContentView(openedURL: $openedURL)
-                .frame(minWidth: 800, minHeight: 500)
+        Window("Knurl", id: "main") {
+            MainWindow(openedURL: $openedURL)
+                .frame(minWidth: 940, minHeight: 560)
                 .onAppear {
-                    configureWindow()
                     appDelegate.onOpenURL = { url in
                         openedURL = url
                     }
                 }
         }
-        .windowStyle(.hiddenTitleBar)
-        .windowResizability(.contentMinSize)
-        .defaultSize(width: 1000, height: 650)
+        .defaultSize(width: 1180, height: 720)
+        .defaultLaunchBehavior(.presented)
         .commands {
             CommandGroup(replacing: .newItem) { }
+
+            CommandGroup(after: .newItem) {
+                Button("Refresh") {
+                    NotificationCenter.default.post(name: .knurlRefresh, object: nil)
+                }
+                .keyboardShortcut("r", modifiers: .command)
+
+                Button("Search…") {
+                    NotificationCenter.default.post(name: .knurlSearch, object: nil)
+                }
+                .keyboardShortcut("k", modifiers: .command)
+            }
+
             CommandMenu("File") {
                 Button("Export JSON…") {
                     guard let actions = exportActions, let report = actions.report,
@@ -55,27 +75,30 @@ struct KnurlApp: App {
         }
     }
 
-    /// Configures the main window: transparent titlebar, no resize, movable by background.
-    private func configureWindow() {
-        guard let window = NSApplication.shared.keyWindow ?? NSApp.mainWindow else { return }
-
-        // Transparent window
-        window.titlebarAppearsTransparent = true
-        window.titleVisibility = .hidden
-        window.isOpaque = false
-        window.backgroundColor = .clear
-        window.isMovableByWindowBackground = true
-
-        // Style mask: titled + closable + miniaturizable (no resizable)
-        window.styleMask.insert([.closable, .miniaturizable])
-        window.styleMask.remove(.resizable)
-    }
-
-    /// Loads the custom app icon from the module bundle.
+    /// Loads the custom app icon from the module resource bundle.
     private static func makeAppIcon() -> NSImage {
-        guard let url = Bundle.module.url(forResource: "Icon", withExtension: "png"),
-              let nsImage = NSImage(contentsOf: url) else { return NSImage() }
+        guard let iconURL = appIconURL(),
+              let nsImage = NSImage(contentsOf: iconURL) else { return NSImage() }
         nsImage.size = NSSize(width: 128, height: 128)
         return nsImage
+    }
+
+    /// Resolves `Icon.png` from the SwiftPM-managed resource bundle.
+    ///
+    /// SwiftPM's generated `Bundle.module` only knows how to find the resource bundle
+    /// sitting next to a bare executable (what `swift run Knurl` produces). Inside the
+    /// packaged `.app` the bundle lives under `Contents/Resources`, which that accessor
+    /// never checks — it asserts instead. So we look in `Bundle.main.resourceURL` first
+    /// (the `.app` layout) and fall back to `Bundle.module` for `swift run`.
+    private static func appIconURL() -> URL? {
+        if let resourceURL = Bundle.main.resourceURL {
+            let bundledIcon = resourceURL
+                .appendingPathComponent("Knurl_Knurl.bundle")
+                .appendingPathComponent("Icon.png")
+            if FileManager.default.fileExists(atPath: bundledIcon.path) {
+                return bundledIcon
+            }
+        }
+        return Bundle.module.url(forResource: "Icon", withExtension: "png")
     }
 }

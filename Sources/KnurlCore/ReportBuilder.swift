@@ -87,6 +87,7 @@ public struct ReportBuilder: Sendable {
         if !engineRows.isEmpty {
             packages.insert(contentsOf: engineRows, at: 0)
         }
+        packages = deduplicate(packages)
         let warning = elements.isEmpty
             ? "Nenhum arquivo .tex encontrado no caminho informado."
             : nil
@@ -154,6 +155,29 @@ public struct ReportBuilder: Sendable {
                 return (false, element.value, nil)
             }
         }
+    }
+
+    // MARK: - Deduplication
+
+    /// Deduplicates packages by `texlivePackage` (case-insensitive), keeping the entry that
+    /// requires attention (`missing`) over silent duplicates — evita notificações repetidas
+    /// quando o mesmo pacote é citado via `\usepackage` + `\RequirePackage` ou em múltiplos arquivos.
+    private func deduplicate(_ packages: [PackageInfo]) -> [PackageInfo] {
+        var seen: [String: PackageInfo] = [:]
+        var order: [String] = []
+        for pkg in packages {
+            let key = pkg.texlivePackage.lowercased()
+            if let existing = seen[key] {
+                // Prioriza `missing` — é o único que exige atenção do usuário
+                if pkg.status == .missing && existing.status != .missing {
+                    seen[key] = pkg
+                }
+                continue
+            }
+            seen[key] = pkg
+            order.append(key)
+        }
+        return order.compactMap { seen[$0] }
     }
 
     /// Generates a shell command to install a missing package, or nil if not applicable.

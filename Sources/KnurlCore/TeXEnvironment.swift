@@ -55,12 +55,24 @@ public struct TeXEnvironment: Sendable {
 
     /// Localiza um executável TeX no PATH, na árvore do usuário
     /// (`~/texlive/<ano>/bin/<arq>/`) ou no texbin padrão do macOS.
+    /// Robustez para app GUI (PATH mínimo do Finder) e sandbox container.
     public static func locateExecutable(_ name: String) -> String? {
         if let onPath = shellPathLookup(name) { return onPath }
+        // Fallback via shell login (captura PATH do usuário em zsh/bash)
+        if let viaShell = shellWhich(name) { return viaShell }
         let fm = FileManager.default
-        let home = fm.homeDirectoryForCurrentUser
+        // Home real mesmo dentro de sandbox (FileManager.homeDirectoryForCurrentUser pode ser container)
+        let homePath = ProcessInfo.processInfo.environment["HOME"]
+            ?? FileManager.default.homeDirectoryForCurrentUser.path
+        let homeURL = URL(fileURLWithPath: homePath)
+        // Fallbacks hard-coded para PATH típico do macOS + texlive
+        let hardPaths = ["/Library/TeX/texbin", "/opt/homebrew/bin", "/usr/local/bin", "/usr/bin"]
+        for dir in hardPaths {
+            let candidate = URL(fileURLWithPath: dir).appendingPathComponent(name).path
+            if fm.isExecutableFile(atPath: candidate) || fm.fileExists(atPath: candidate) { return candidate }
+        }
         let candidates: [URL] = [
-            home.appendingPathComponent("texlive"),                       // install-tl do usuário (~/texlive/<ano>)
+            homeURL.appendingPathComponent("texlive"),                       // install-tl do usuário (~/texlive/<ano>)
             URL(fileURLWithPath: "/usr/local/texlive"),                    // instalação padrão macOS (/usr/local/texlive/<ano>)
         ]
         for root in candidates {
@@ -70,24 +82,46 @@ public struct TeXEnvironment: Sendable {
                     guard let archs = try? fm.contentsOfDirectory(atPath: bin.path) else { continue }
                     for arch in archs {
                         let candidate = bin.appendingPathComponent(arch).appendingPathComponent(name)
-                        if fm.isExecutableFile(atPath: candidate.path) { return candidate.path }
+                        if fm.isExecutableFile(atPath: candidate.path) || fm.fileExists(atPath: candidate.path) { return candidate.path }
                     }
                 }
             }
         }
         let texbin = URL(fileURLWithPath: "/Library/TeX/texbin").appendingPathComponent(name)
-        if fm.isExecutableFile(atPath: texbin.path) { return texbin.path }
+        if fm.isExecutableFile(atPath: texbin.path) || fm.fileExists(atPath: texbin.path) { return texbin.path }
         return nil
     }
 
     /// Searches PATH directories for the named executable.
     private static func shellPathLookup(_ name: String) -> String? {
-        guard let path = ProcessInfo.processInfo.environment["PATH"] else { return nil }
+        let rawPath = ProcessInfo.processInfo.environment["PATH"] ?? ""
+        // PATH do Finder é mínimo (/usr/bin:/bin:/usr/sbin:/sbin) — suplementa com hard-coded.
+        let extra = ":/Library/TeX/texbin:/opt/homebrew/bin:/usr/local/bin"
+        let combined = rawPath.isEmpty ? String(extra.dropFirst()) : rawPath + extra
         let fm = FileManager.default
-        for dir in path.split(separator: ":") where !dir.isEmpty {
+        for dir in combined.split(separator: ":") where !dir.isEmpty {
             let candidate = URL(fileURLWithPath: String(dir)).appendingPathComponent(name).path
-            if fm.isExecutableFile(atPath: candidate) { return candidate }
+            if fm.isExecutableFile(atPath: candidate) || fm.fileExists(atPath: candidate) { return candidate }
         }
+        return nil
+    }
+
+    private static func shellWhich(_ name: String) -> String? {
+        // Tenta via shell login para capturar PATH do dotfiles; timeout curto, falha silenciosa.
+        let proc = Process()
+        proc.executableURL = URL(fileURLWithPath: "/bin/sh")
+        proc.arguments = ["-l", "-c", "which \(name) 2>/dev/null"]
+        let pipe = Pipe()
+        proc.standardOutput = pipe
+        proc.standardError = FileHandle.nullDevice
+        do {
+            try proc.run()
+            proc.waitUntilExit()
+            guard proc.terminationStatus == 0 else { return nil }
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            guard let out = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines), !out.isEmpty else { return nil }
+            if FileManager.default.isExecutableFile(atPath: out) || FileManager.default.fileExists(atPath: out) { return out }
+        } catch { }
         return nil
     }
 }

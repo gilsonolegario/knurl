@@ -49,28 +49,18 @@ struct LogTail: View {
         .padding(.bottom, 6)
     }
 
-    /// Renders the last `tailCount` lines in a monospaced block.
+    /// Renders the last `tailCount` lines — large while parsing, single line after.
     private var terminal: some View {
         let tail = Array(lines.suffix(tailCount))
-        return VStack(alignment: .leading, spacing: 2) {
-            ForEach(Array(tail.enumerated()), id: \.offset) { _, line in
-                Text(line)
-                    .font(.system(.caption, design: .monospaced))
-                    .foregroundStyle(.primary)
-                    .textSelection(.enabled)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-        }
-        .padding(8)
-        .background(
-            RoundedRectangle(cornerRadius: Brand.rSmall, style: .continuous)
-                .fill(Brand.cardFill)
-                .overlay(
-                    RoundedRectangle(cornerRadius: Brand.rSmall, style: .continuous)
-                        .strokeBorder(Brand.hairline, lineWidth: 1)
-                )
-                .shadow(color: .black.opacity(0.06), radius: 7, x: 0, y: 2)
-        )
+        return ConsoleView(lines: tail, autoScroll: isLive)
+            .frame(height: isLive ? nil : 36, alignment: .top)
+            .frame(minHeight: isLive ? 180 : 36)
+            .frame(maxHeight: isLive ? .infinity : 60, alignment: .top)
+            .clipShape(RoundedRectangle(cornerRadius: Brand.rSmall, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: Brand.rSmall, style: .continuous)
+                    .strokeBorder(Brand.hairline, lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.06), radius: 7, x: 0, y: 2)
     }
 }

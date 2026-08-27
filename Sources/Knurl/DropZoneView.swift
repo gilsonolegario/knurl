@@ -1,4 +1,6 @@
 // DropZoneView.swift — Drag-and-drop target that accepts .tex files or folders for analysis, with prominent and slim modes.
+//
+// Davit-inspired clean look: EmptyState-like prominent, secondary background, hairline stroke.
 
 import SwiftUI
 import AppKit
@@ -26,61 +28,100 @@ struct DropZone: View {
         }
     }
 
+    // MARK: - Prominent (EmptyState-like Davit)
+
     private var prominentContent: some View {
-        VStack(spacing: 8) {
-            Image(systemName: confirmed ? "checkmark.circle.fill" : "doc.text.magnifyingglass")
-                .font(.system(size: 24, weight: .medium))
-                .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(confirmed ? .green : Brand.accent)
-            Text(isTargeted ? "Drop to analyze" : "Drop the .tex file (or folder) here")
-                .font(.system(size: 13, weight: .medium))
-            Text("or click to choose")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+        ZStack {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(isTargeted ? Color.accentColor.opacity(0.08) : Color(nsColor: .controlBackgroundColor).opacity(0.6))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .strokeBorder(isTargeted ? Color.accentColor : Color.primary.opacity(0.08), lineWidth: isTargeted ? 2 : 1)
+                )
+            VStack(spacing: 12) {
+                Image(systemName: confirmed ? "checkmark.circle.fill" : "doc.text.magnifyingglass")
+                    .font(.system(size: 42))
+                    .foregroundStyle(confirmed ? Color.green : Color.primary.opacity(0.25))
+                VStack(spacing: 4) {
+                    Text(isTargeted ? "Drop to analyze" : "Drop the .tex file (or folder) here")
+                        .font(.title3.weight(.semibold))
+                    Text("or choose a file to get started")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
+                Button {
+                    openPanel()
+                } label: {
+                    Text("Choose File").hitAreaRect()
+                }
+                .buttonStyle(.borderedProminent)
+                .hitAreaRect()
+                .padding(.top, 4)
+            }
+            .padding(.vertical, 28)
+            .padding(.horizontal, 16)
         }
-        .padding(.vertical, 20)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(chrome)
+        .frame(maxWidth: .infinity)
+        .frame(minHeight: 160)
         .animation(.easeInOut(duration: 0.18), value: isTargeted)
         .animation(.easeOut(duration: 0.15), value: confirmed)
         .contentShape(Rectangle())
         .modifier(DropZoneGestures(isTargeted: $isTargeted, confirmed: $confirmed, onDrop: onDrop))
     }
 
+    // MARK: - Slim (compact bar)
+
     private var slimContent: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 10) {
             Image(systemName: confirmed ? "checkmark.circle.fill" : "doc.text.magnifyingglass")
                 .font(.system(size: 14, weight: .medium))
-                .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(confirmed ? .green : Brand.accent)
+                .foregroundStyle(confirmed ? Color.green : Color.secondary)
             Text(isTargeted ? "Drop to analyze" : "Drop the .tex file (or folder) here")
                 .font(.system(size: 12, weight: .medium))
                 .lineLimit(1)
+                .foregroundStyle(.primary)
+            Spacer(minLength: 8)
+            Button {
+                openPanel()
+            } label: {
+                Text("Choose File")
+                    .font(.caption)
+                    .hitAreaRect()
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .hitAreaRect()
         }
+        .padding(.horizontal, 12)
         .frame(maxWidth: .infinity)
         .frame(height: 36)
-        .background(chrome)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(isTargeted ? Color.accentColor.opacity(0.08) : Color(nsColor: .controlBackgroundColor))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .strokeBorder(isTargeted ? Color.accentColor : Color.primary.opacity(0.08), lineWidth: isTargeted ? 1.5 : 1)
+        )
         .animation(.easeInOut(duration: 0.18), value: isTargeted)
         .animation(.easeOut(duration: 0.15), value: confirmed)
         .contentShape(Rectangle())
         .modifier(DropZoneGestures(isTargeted: $isTargeted, confirmed: $confirmed, onDrop: onDrop))
     }
 
-    private var chrome: some View {
-        RoundedRectangle(cornerRadius: Brand.rCard, style: .continuous)
-            .fill(isTargeted ? Brand.accent.opacity(0.08) : Brand.cardFill)
-            .overlay(
-                RoundedRectangle(cornerRadius: Brand.rCard, style: .continuous)
-                    .strokeBorder(
-                        isTargeted ? Brand.accent : Brand.hairline,
-                        lineWidth: isTargeted ? 2 : 1
-                    )
-            )
-            .shadow(color: .black.opacity(0.06), radius: 7, x: 0, y: 2)
+    /// Opens an NSOpenPanel to pick a .tex file or folder directly (Choose File button).
+    private func openPanel() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = true
+        panel.allowedContentTypes = [.init(filenameExtension: "tex")!, .folder]
+        if panel.runModal() == .OK, let url = panel.url {
+            onDrop(url)
+        }
     }
 }
 
-/// ViewModifier that wires `onDrop` and click-to-open gestures to a drop zone.
+/// ViewModifier that wires `onDrop` to a drop zone (drag only; click handled by the caller button).
 private struct DropZoneGestures: ViewModifier {
     @Binding var isTargeted: Bool
     @Binding var confirmed: Bool
@@ -98,15 +139,6 @@ private struct DropZoneGestures: ViewModifier {
                     }
                 }
                 return true
-            }
-            .onTapGesture {
-                let panel = NSOpenPanel()
-                panel.canChooseFiles = true
-                panel.canChooseDirectories = true
-                panel.allowedContentTypes = [.init(filenameExtension: "tex")!, .folder]
-                if panel.runModal() == .OK, let url = panel.url {
-                    onDrop(url)
-                }
             }
     }
 }

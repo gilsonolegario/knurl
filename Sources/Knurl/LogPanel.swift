@@ -1,4 +1,6 @@
 // LogPanel.swift — Collapsible log panel with header, live indicator, copy button, and persistent-log reveal.
+//
+// Davit-inspired clean terminal: ConsoleView + StatusDot + bordered container.
 
 import SwiftUI
 import KnurlCore
@@ -21,36 +23,37 @@ public struct LogPanel: View {
         }
     }
 
-    /// Header row with line count, live indicator, copy, and reveal buttons.
+    // MARK: - Header
+
+    /// Header row with expand toggle, line count, live dot, copy, and reveal buttons.
     private var header: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 8) {
             Button(action: onToggle) {
                 HStack(spacing: 6) {
+                    Image(systemName: expanded ? "chevron.down" : "chevron.right")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(.secondary)
                     Text("Log")
                         .font(.system(size: 12, weight: .semibold))
                     Text("\(lines.count) lines")
                         .font(.caption)
-                    if !isLive {
-                        Image(systemName: expanded ? "chevron.down" : "chevron.right")
-                            .font(.system(size: 9, weight: .semibold))
-                    }
+                        .foregroundStyle(.secondary)
                 }
-                .foregroundStyle(Brand.textSecondary)
+                .foregroundStyle(Color.secondary)
                 .contentShape(Rectangle())
+                .hitAreaRect()
             }
             .buttonStyle(.plain)
+            .contentShape(Rectangle())
+            .hitAreaRect()
             .disabled(isLive)
 
             Spacer()
 
             if isLive {
                 HStack(spacing: 4) {
-                    Circle()
-                        .fill(Brand.accent)
-                        .frame(width: 6, height: 6)
-                    Text("live")
-                        .font(.caption)
-                        .foregroundStyle(Brand.textSecondary)
+                    StatusDot(color: .green, pulsing: true)
+                    Text("live").font(.caption).foregroundStyle(.secondary)
                 }
             }
 
@@ -60,58 +63,44 @@ public struct LogPanel: View {
                 NSPasteboard.general.setString(text, forType: .string)
             } label: {
                 Image(systemName: "doc.on.doc")
+                    .hitAreaRect()
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+            .contentShape(Rectangle())
+            .hitAreaRect()
             .help("Copy log")
 
             if let persistentLogURL {
                 Button {
                     NSWorkspace.shared.activateFileViewerSelecting([persistentLogURL])
                 } label: {
-                    Image(systemName: "doc.text.magnifyingglass")
+                    Image(systemName: "folder")
+                        .hitAreaRect()
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+                .contentShape(Rectangle())
+                .hitAreaRect()
                 .help("Reveal installation log in Finder")
             }
         }
-        .padding(.horizontal, 2)
+        .padding(.horizontal, 4)
         .padding(.bottom, 6)
     }
 
-    /// Monospaced scrollable terminal view with auto-scroll when live.
+    // MARK: - Terminal
+
+    /// Monospaced scrollable terminal view backed by the shared ConsoleView.
     private var terminal: some View {
-        ScrollViewReader { proxy in
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 2) {
-                    ForEach(Array(lines.suffix(bufferLimit).enumerated()), id: \.offset) { _, line in
-                        Text(line)
-                            .font(.system(.caption, design: .monospaced))
-                            .foregroundStyle(.primary)
-                            .textSelection(.enabled)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    Color.clear
-                        .frame(height: 0)
-                        .id("bottom")
-                }
-                .padding(8)
-            }
-            .scrollIndicators(.visible)
-            .onChange(of: lines.count) { _, _ in
-                guard isLive else { return }
-                proxy.scrollTo("bottom", anchor: .bottom)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: Brand.rSmall, style: .continuous)
-                .fill(Brand.cardFill)
-                .overlay(
-                    RoundedRectangle(cornerRadius: Brand.rSmall, style: .continuous)
-                        .strokeBorder(Brand.hairline, lineWidth: 1)
-                )
-                .shadow(color: .black.opacity(0.06), radius: 7, x: 0, y: 2)
-        )
+        ConsoleView(lines: Array(lines.suffix(bufferLimit)), autoScroll: isLive)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .strokeBorder(.primary.opacity(0.08), lineWidth: 1)
+            )
     }
 }

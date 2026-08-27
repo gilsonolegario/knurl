@@ -24,7 +24,7 @@ Bundle `.app` em `dist/` é montado MANUALMENTE: binário universal (não o slic
 
 - **KnurlCore** = biblioteca de lógica pura (parsing, detecção de distribuição/engine, CTANMapper, InstallPlanner, relatórios) — SEM dependência de UI, totalmente testada. **Lógica nova entra no KnurlCore com teste.** `Knurl` = app SwiftUI (glass UI, dropzone, painel de log).
 - Estilo obrigatório (commit `1550c7b`): headers por arquivo, `///` nas APIs públicas, `// MARK:` organizando seções.
-- **Botões/UI nativos era Sequoia** (`docs/botoes-convencoes.md`): primário `.appProminent()` (pill âmbar, label escuro), secundário `.bordered`, toolbar `.borderless`; todo botão de ação tem ícone. **Glass só em conteúdo** (shim `glassEffectCompat` em `Brand.swift`) — NUNCA em botões de ação. Sem Material-3, sem hover/scaleEffect custom.
+- **Botões/UI nativos era Sequoia** (`docs/botoes-convencoes.md`): primário `.appProminent()` (pill âmbar, label escuro), secundário `.bordered`, toolbar `.borderless`; todo botão de ação tem ícone. **Glass só em conteúdo** (shim `glassEffectCompat` em `Brand.swift`) — NUNCA em botões de ação. Sem Material-3, sem hover/scaleEffect custom. **Regra 2026-08-26 (global):** todo `Button` tem que ser clicável em **toda** a área visual — nunca só no ícone (`Image` com `.onTapGesture` é proibido; usar `Button { } label: { Label(...) }` nativo; se `ButtonStyle` custom → `.contentShape(Rectangle())`).
 - Instalação com root passa por coordinator dedicado (`InstallCoordinator`/`NativeAdminRunner`) com consentimento explícito — **o app nunca roda privilegiado**; não adicionar escalada silenciosa.
 
 ## Zonas proibidas

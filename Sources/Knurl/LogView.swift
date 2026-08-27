@@ -1,8 +1,10 @@
 // LogView.swift — Full-height scrollable log view for the Log tab with copy and reveal-in-Finder actions.
+//
+// Davit-inspired clean terminal: ConsoleView + header with StatusDot pulsing.
 
 import SwiftUI
 
-/// Full log view used in the Log tab: header with line count, copy, and reveal buttons.
+/// Full log view used in the Log tab: header with line count, live dot, copy, and reveal buttons.
 struct LogView: View {
     let lines: [String]
     let isLive: Bool
@@ -15,25 +17,22 @@ struct LogView: View {
         }
     }
 
+    // MARK: - Header
+
     /// Header row with line count, live indicator, copy, and reveal buttons.
     private var header: some View {
-        HStack(spacing: 6) {
-            Text("Log")
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(Brand.textPrimary)
+        HStack(spacing: 8) {
+            Image(systemName: "doc.text").foregroundStyle(.secondary)
+            Text("Log").font(.headline)
 
             Text("\(lines.count) lines")
                 .font(.caption)
-                .foregroundStyle(Brand.textSecondary)
+                .foregroundStyle(.secondary)
 
             if isLive {
                 HStack(spacing: 4) {
-                    Circle()
-                        .fill(Brand.accent)
-                        .frame(width: 6, height: 6)
-                    Text("live")
-                        .font(.caption)
-                        .foregroundStyle(Brand.textSecondary)
+                    StatusDot(color: .green, pulsing: true)
+                    Text("live").font(.caption).foregroundStyle(.secondary)
                 }
             }
 
@@ -45,58 +44,44 @@ struct LogView: View {
                 NSPasteboard.general.setString(text, forType: .string)
             } label: {
                 Image(systemName: "doc.on.doc")
+                    .hitAreaRect()
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+            .contentShape(Rectangle())
+            .hitAreaRect()
             .help("Copy log")
 
             if let persistentLogURL {
                 Button {
                     NSWorkspace.shared.activateFileViewerSelecting([persistentLogURL])
                 } label: {
-                    Image(systemName: "doc.text.magnifyingglass")
+                    Image(systemName: "folder")
+                        .hitAreaRect()
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+                .contentShape(Rectangle())
+                .hitAreaRect()
                 .help("Reveal installation log in Finder")
             }
         }
-        .padding(.horizontal, 2)
+        .padding(.horizontal, 4)
         .padding(.bottom, 8)
     }
 
-    /// Monospaced scrollable terminal with auto-scroll when live.
+    // MARK: - Terminal
+
+    /// Monospaced scrollable terminal backed by the shared ConsoleView.
     private var terminal: some View {
-        ScrollViewReader { proxy in
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 2) {
-                    ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
-                        Text(line)
-                            .font(.system(.caption, design: .monospaced))
-                            .foregroundStyle(.primary)
-                            .textSelection(.enabled)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    Color.clear
-                        .frame(height: 0)
-                        .id("bottom")
-                }
-                .padding(8)
-            }
-            .scrollIndicators(.visible)
-            .onChange(of: lines.count) { _, _ in
-                guard isLive else { return }
-                proxy.scrollTo("bottom", anchor: .bottom)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: Brand.rSmall, style: .continuous)
-                .fill(Brand.cardFill)
-                .overlay(
-                    RoundedRectangle(cornerRadius: Brand.rSmall, style: .continuous)
-                        .strokeBorder(Brand.hairline, lineWidth: 1)
-                )
-                .shadow(color: .black.opacity(0.06), radius: 7, x: 0, y: 2)
-        )
+        ConsoleView(lines: lines, autoScroll: isLive)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .strokeBorder(.primary.opacity(0.08), lineWidth: 1)
+            )
     }
 }
