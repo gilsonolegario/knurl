@@ -38,7 +38,7 @@ struct StatusDashboard: View {
                         message: "Drop a .tex file or folder to analyze your TeX project."
                     )
                     .padding(.vertical, 20)
-                    .background(.background.secondary, in: RoundedRectangle(cornerRadius: 10))
+                    .knurlCardBackground(cornerRadius: 10)
                 }
             }
             .padding(18)
@@ -48,7 +48,7 @@ struct StatusDashboard: View {
         .task {
             detectedEnvironment = TeXEnvironment.makeDefault().info
         }
-        .onChange(of: coordinator.states[InstallCoordinator.bootstrapKey]) { _, newState in
+        .knurlOnChange(of: coordinator.states[InstallCoordinator.bootstrapKey]) { newState in
             // Após instalar o TeX Live, re-prova o ambiente para refletir a nova distribuição.
             if case .succeeded = newState {
                 detectedEnvironment = TeXEnvironment.makeDefault().info
@@ -99,7 +99,7 @@ struct StatusDashboard: View {
             .hitAreaRect()
         }
         .padding(16)
-        .background(.background.secondary, in: RoundedRectangle(cornerRadius: 12))
+        .knurlCardBackground(cornerRadius: 12)
     }
 
     // MARK: - Install BasicTeX (no distribution present)

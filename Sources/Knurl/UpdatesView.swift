@@ -171,7 +171,7 @@ struct UpdatesView: View {
                 TableColumn("Status") { _ in Text("update available").foregroundStyle(.secondary) }
                 TableColumn("Action") { row in updateCell(for: row.name) }
             }
-            .alternatingRowBackgrounds()
+            .knurlAlternatingRowBackgrounds()
             .frame(height: min(320, max(80, CGFloat(pending.count) * 26 + 30)))
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(nsColor: .separatorColor), lineWidth: 1))

@@ -2,7 +2,7 @@
 
 Regras globais (`~/.config/opencode/AGENTS.md`) valem sempre; este arquivo tem precedência neste diretório.
 
-**TeX diagnostics & package installer for macOS**: analisa projeto `.tex`, mapeia `\usepackage` para pacotes TeX Live (overrides embutidos + mapping oficial TUG) e instala o que falta via `tlmgr` — pedindo admin só quando necessário. Swift 6.0 (tools 6.0), SwiftPM puro, macOS 15+, binário universal (arm64+x86_64). MIT, público em `github.com/gilsonolegario/knurl`; site em Pages via **worktree `.site-worktree/`** (branch `gh-pages`). Commits estilo conventional, em inglês.
+**TeX diagnostics & package installer for macOS**: analisa projeto `.tex`, mapeia `\usepackage` para pacotes TeX Live (overrides embutidos + mapping oficial TUG) e instala o que falta via `tlmgr` — pedindo admin só quando necessário. Swift 6.0 (tools 6.0), SwiftPM puro, macOS 13+ (Ventura), binário universal (arm64+x86_64). MIT, público em `github.com/gilsonolegario/knurl`; site em Pages via **worktree `.site-worktree/`** (branch `gh-pages`). Commits estilo conventional, em inglês.
 
 ## Comandos
 

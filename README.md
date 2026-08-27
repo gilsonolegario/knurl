@@ -10,7 +10,7 @@ Drop your `.tex` project, find out what's missing, install it in one click.
 
 [Website](https://gilsonolegario.github.io/knurl/) · [Download](https://gilsonolegario.github.io/knurl/Knurl.zip) · [Report a Bug](https://github.com/gilsonolegario/knurl/issues)
 
-![Platform](https://img.shields.io/badge/platform-macOS%20Sequoia%2015%2B-black)
+![Platform](https://img.shields.io/badge/platform-macOS%20Ventura%2013%2B-black)
 ![Swift](https://img.shields.io/badge/Swift-6.0-F05138?logo=swift&logoColor=white)
 ![Architecture](https://img.shields.io/badge/binary-universal%20arm64%20%2B%20x86__64-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -30,13 +30,13 @@ Missing LaTeX packages are the most common cause of compile failures — and the
 - 🗺️ **CTAN → TL mapping** — built-in overrides plus the [official TUG mapping](https://tug.org/~mseven/ctan-to-tl.tsv), so `tikz` resolves to `pgf` even when the name differs
 - 📦 **One-click install** — missing packages installed via `tlmgr`, asking for admin privileges only when needed
 - 📊 **Exportable reports** — full report as JSON or Markdown: environment, packages, actions taken
-- ✨ **Native glass UI** — translucent window, floating sidebar, status tiles; built for Sequoia in light and dark mode
+- ✨ **Native glass UI** — translucent window, floating sidebar, status tiles; built for macOS Ventura and later
 
 ## Requirements
 
 | | |
 |---|---|
-| OS | macOS Sequoia (15) or later |
+| OS | macOS Ventura (13) or later |
 | Hardware | Apple Silicon or Intel Mac |
 | TeX | A TeX Live–based distribution for installs ([BasicTeX](https://www.tug.org/mactex/morepackages.html) works) |
 

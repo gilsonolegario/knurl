@@ -116,7 +116,7 @@ extension View {
     func appProminent() -> some View {
         self
             .buttonStyle(.borderedProminent)
-            .buttonBorderShape(.capsule)
+            .knurlCapsuleBorder()
             .tint(Brand.accent)
             .contentShape(Rectangle())
     }

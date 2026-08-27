@@ -92,7 +92,7 @@ struct MainWindow: View {
             withAnimation { selection = .packages }
             vm.analyze(at: url)
         }
-        .onChange(of: openedURL) { _, url in
+        .knurlOnChange(of: openedURL) { url in
             if let url {
                 withAnimation { selection = .packages }
                 vm.analyze(at: url)
@@ -115,7 +115,7 @@ struct MainWindow: View {
                 }
             }
         }
-        .onChange(of: vm.report) { old, new in
+        .knurlOnChangeWithOld(of: vm.report) { old, new in
             if new != nil && old == nil {
                 withAnimation { selection = .packages }
             }
@@ -142,12 +142,12 @@ struct MainWindow: View {
             }
             return true
         }
-        .onChange(of: vm.isLoading) { _, loading in
+        .knurlOnChange(of: vm.isLoading) { loading in
             if !loading { isGlobalTargeted = false; isDropZoneTargeted = false }
         }
-        .onChange(of: vm.report) { _, _ in updateCachedCounts() }
-        .onChange(of: vm.log.count) { _, _ in updateCachedCounts() }
-        .onChange(of: vm.installOverrides) { _, _ in updateCachedCounts() }
+        .knurlOnChange(of: vm.report) { _ in updateCachedCounts() }
+        .knurlOnChange(of: vm.log.count) { _ in updateCachedCounts() }
+        .knurlOnChange(of: vm.installOverrides) { _ in updateCachedCounts() }
         .overlay {
             if isGlobalTargeted {
                 VStack(spacing: 8) {

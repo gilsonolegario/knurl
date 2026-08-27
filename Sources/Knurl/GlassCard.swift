@@ -24,7 +24,7 @@ struct GlassCard<Content: View>: View {
     var body: some View {
         content
             .padding(padding)
-            .background(.background.secondary, in: RoundedRectangle(cornerRadius: Brand.rCard, style: .continuous))
+            .knurlCardBackground(cornerRadius: Brand.rCard)
     }
 }
 
@@ -104,7 +104,7 @@ struct DetailCard<Content: View>: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.background.secondary, in: RoundedRectangle(cornerRadius: 10))
+        .knurlCardBackground(cornerRadius: 10)
     }
 }
 
@@ -239,7 +239,7 @@ struct ConsoleView: View {
                 .padding(10)
             }
             .background(Color(nsColor: .textBackgroundColor))
-            .onChange(of: lines.count) {
+            .knurlOnChange(of: lines.count) { _ in
                 if autoScroll {
                     proxy.scrollTo("console-bottom", anchor: .bottom)
                 }

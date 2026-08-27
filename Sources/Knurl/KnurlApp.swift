@@ -40,7 +40,6 @@ struct KnurlApp: App {
                 }
         }
         .defaultSize(width: 1180, height: 720)
-        .defaultLaunchBehavior(.presented)
         .commands {
             CommandGroup(replacing: .newItem) { }
 

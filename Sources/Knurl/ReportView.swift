@@ -95,7 +95,7 @@ struct ReportView: View {
                 }
                 .padding(.horizontal, 8)
                 .padding(.vertical, 6)
-                .background(.background.secondary.opacity(0.6), in: RoundedRectangle(cornerRadius: 8))
+                .knurlCardBackgroundOpacity(0.6, cornerRadius: 8)
                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(.primary.opacity(0.08), lineWidth: 1))
 
                 statusFilter(packages)
@@ -326,7 +326,7 @@ struct ReportView: View {
                             )
                         }
                     }
-                    .alternatingRowBackgrounds()
+                    .knurlAlternatingRowBackgrounds()
                     .frame(height: 160)
                     .clipShape(RoundedRectangle(cornerRadius: 8))
                     .overlay(RoundedRectangle(cornerRadius: 8).stroke(.primary.opacity(0.06), lineWidth: 1))

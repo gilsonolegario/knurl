@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "Knurl",
-    platforms: [.macOS(.v15)],
+    platforms: [.macOS(.v13)],
     products: [
         .library(name: "KnurlCore", targets: ["KnurlCore"]),
         .executable(name: "Knurl", targets: ["Knurl"])
