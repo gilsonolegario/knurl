@@ -1,21 +1,21 @@
-// CTANMapper.swift — Resolves TeX package names to their canonical CTAN names via the CTAN JSON API.
+// CTANMapper.swift — Resolve nomes de pacotes TeX para seus nomes canônicos no CTAN via API JSON.
 
 import Foundation
 
-/// Protocol for resolving a TeX element name to its CTAN match.
+/// Protocolo para resolver o nome de um elemento TeX para seu par CTAN.
 public protocol CTANMapping: Sendable {
     func resolve(_ name: String) async throws -> CTANMatch
 }
 
-/// Result of a CTAN name resolution attempt.
+/// Resultado de uma tentativa de resolução de nome no CTAN.
 public enum CTANMatch: Equatable, Sendable {
-    /// Successfully resolved to a canonical CTAN package name.
+    /// Resolvido com sucesso para um pacote canônico do CTAN.
     case matched(package: String)
-    /// No matching package found on CTAN (or network error).
+    /// Nenhum pacote correspondente no CTAN (ou erro de rede transitório).
     case unknown
 }
 
-/// Resolves TeX package names to canonical CTAN names with in-memory caching.
+/// Resolve nomes de pacotes TeX para nomes canônicos do CTAN, com cache em memória.
 public struct CTANMapper: Sendable {
     private struct Payload: Decodable {
         let name: String?
@@ -23,7 +23,7 @@ public struct CTANMapper: Sendable {
 
     private let session: URLSession
     private let cache: LockedDict
-    /// Optional callback invoked on each resolution attempt (for UI progress).
+    /// Callback opcional chamado a cada tentativa de resolução (progresso na UI).
     private let onResolve: (@Sendable (String) -> Void)?
 
     public init(session: URLSession = .shared, cache: [String: CTANMatch] = [:], onResolve: (@Sendable (String) -> Void)? = nil) {
@@ -32,31 +32,44 @@ public struct CTANMapper: Sendable {
         self.onResolve = onResolve
     }
 
-    /// Resolves a package name against CTAN. Returns cached results; network timeout is 10s.
+    /// Resolve um nome de pacote contra o CTAN. Retorna resultado em cache; timeout de rede é 10s.
+    /// Falhas de rede (timeout/offline) NÃO são cacheadas: são transitórias e devem ser retentadas.
     public func resolve(_ name: String) async throws -> CTANMatch {
         let key = name.lowercased()
         if let cached = cache.value(forKey: key) { return cached }
         onResolve?(name)
-        let url = URL(string: "https://ctan.org/json/2.0/pkg/\(key)")!
+        guard let url = URL(string: "https://ctan.org/json/2.0/pkg/\(key)") else {
+            // URL malformada é erro de programação, não de rede — não faz sentido cachear.
+            return .unknown
+        }
         var request = URLRequest(url: url)
         request.timeoutInterval = 10
         do {
             let (data, response) = try await session.data(for: request)
-            guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+            guard let http = response as? HTTPURLResponse else {
+                // Resposta não-HTTP (queda de rede): não cacheia, tenta de novo depois.
+                return .unknown
+            }
+            if http.statusCode == 200 {
+                // Nome canônico do CTAN (campo `name`); fallback para o nome consultado.
+                let canonical = (try? JSONDecoder().decode(Payload.self, from: data).name) ?? name
+                cache.set(.matched(package: canonical), forKey: key)
+                return .matched(package: canonical)
+            }
+            if http.statusCode == 404 {
+                // Pacote de fato inexistente no CTAN: seguro cachear como desconhecido.
                 cache.set(.unknown, forKey: key)
                 return .unknown
             }
-            // Nome canônico do CTAN (campo `name`); fallback para o nome consultado.
-            let canonical = (try? JSONDecoder().decode(Payload.self, from: data).name) ?? name
-            cache.set(.matched(package: canonical), forKey: key)
-            return .matched(package: canonical)
+            // Outros status (429/5xx/erro transitório): não cacheia, retenta mais tarde.
+            return .unknown
         } catch {
-            cache.set(.unknown, forKey: key)
+            // Falha de rede (timeout, offline): não confundir com "não encontrado".
             return .unknown
         }
     }
 
-    /// Thread-safe dictionary used as the in-memory cache.
+    /// Dicionário thread-safe usado como cache em memória.
     private final class LockedDict: @unchecked Sendable {
         private var storage: [String: CTANMatch]
         private let lock = NSLock()

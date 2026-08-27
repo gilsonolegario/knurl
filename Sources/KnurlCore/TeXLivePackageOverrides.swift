@@ -1,12 +1,12 @@
-// TeXLivePackageOverrides.swift — Offline heuristic mapping from \usepackage/\documentclass names to TeX Live packages.
+// TeXLivePackageOverrides.swift — Mapeamento heurístico offline de nomes de `\usepackage`/`\documentclass` para pacotes TeX Live.
 
 import Foundation
 
-/// Heuristic mapping from `\usepackage` / `\documentclass` names
-/// to TeX Live package names (CTAN → TL).
+/// Mapeamento heurístico de nomes de `\usepackage` / `\documentclass` para pacotes TeX Live (CTAN → TL).
 ///
-/// Source of truth for CTAN→TL: https://tug.org/~mseven/ctan-to-tl.tsv
-/// Only entries where CTAN name ≠ TL name are listed.
+/// Fonte da verdade para CTAN→TL: https://tug.org/~mseven/ctan-to-tl.tsv
+/// Inclui tanto entradas onde o nome difere (ex.: `tikz` → `pgf`) quanto entradas de identidade
+/// (`babel` → `babel`), que servem para evitar consulta de rede em pacotes já conhecidos.
 public enum TeXLivePackageOverrides {
     /// Maps document class names to their owning TeX Live package.
     public static let documentClass: [String: String] = [

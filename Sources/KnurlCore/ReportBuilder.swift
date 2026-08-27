@@ -1,8 +1,8 @@
-// ReportBuilder.swift — Orchestrates the full analysis pipeline: scan → resolve → build TeXReport.
+// ReportBuilder.swift — Orquestra o pipeline completo de análise: scan → resolve → monta o `TeXReport`.
 
 import Foundation
 
-/// Top-level coordinator that scans a project, resolves all dependencies, and produces a `TeXReport`.
+/// Coordenador de alto nível: varre o projeto, resolve as dependências e produz um `TeXReport`.
 public struct ReportBuilder: Sendable {
     private let analyzer: TeXAnalyzer
     private let mapper: CTANMapping
@@ -17,7 +17,7 @@ public struct ReportBuilder: Sendable {
         self.catalog = catalog
     }
 
-    /// Builds a complete report for the project at the given URL (file or directory).
+    /// Monta um relatório completo para o projeto no URL informado (arquivo ou diretório).
     public func build(at url: URL) async throws -> TeXReport {
         let project = try analyzer.analyze(at: url)
         let local = project.localPackages
@@ -101,7 +101,7 @@ public struct ReportBuilder: Sendable {
 
     private typealias Resolved = (mapped: Bool, texName: String?, source: String?)
 
-    /// Resolves non-local elements in parallel with a concurrency limit of 6.
+    /// Resolve elementos não-locais em paralelo, com limite de 6 tarefas concorrentes.
     private func resolveInParallel(elements: [TeXElement], isLocal: (TeXElement) -> Bool,
                                    into resolution: inout [Int: Resolved]) async {
         let candidates = elements.indices.filter { index in
@@ -131,7 +131,7 @@ public struct ReportBuilder: Sendable {
         }
     }
 
-    /// Resolution cascade: local overrides → catalog → CTAN API → tlmgr file search.
+    /// Cascata de resolução: overrides locais → catálogo → API CTAN → busca de arquivo no tlmgr.
     private func resolve(_ element: TeXElement) async -> Resolved {
         if let override = TeXLivePackageOverrides.texlivePackage(for: element) {
             return (true, override, "heuristic")
@@ -180,7 +180,7 @@ public struct ReportBuilder: Sendable {
         return order.compactMap { seen[$0] }
     }
 
-    /// Generates a shell command to install a missing package, or nil if not applicable.
+    /// Gera o comando de shell para instalar um pacote faltante, ou nil se não aplicável.
     private func suggestedCommand(for element: TeXElement, texName: String?, status: PackageStatus) -> String? {
         guard status == .missing, let texName else { return nil }
         if environment.info.tlmgr {
