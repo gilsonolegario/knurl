@@ -123,7 +123,7 @@ enum ActionCells {
         .buttonStyle(.plain)
         .contentShape(Capsule())
         .hitAreaRect()
-        .help("Download from CTAN")
+        .quickHelp("Download from CTAN")
     }
 
     @MainActor
@@ -166,6 +166,6 @@ enum ActionCells {
         .buttonStyle(.plain)
         .contentShape(Capsule())
         .hitAreaRect()
-        .help("Copy command")
+        .quickHelp("Copy command")
     }
 }

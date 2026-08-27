@@ -51,7 +51,7 @@ struct LogView: View {
             .foregroundStyle(.secondary)
             .contentShape(Rectangle())
             .hitAreaRect()
-            .help("Copy log")
+            .quickHelp("Copy log")
 
             if let persistentLogURL {
                 Button {
@@ -65,7 +65,7 @@ struct LogView: View {
                 .foregroundStyle(.secondary)
                 .contentShape(Rectangle())
                 .hitAreaRect()
-                .help("Reveal installation log in Finder")
+                .quickHelp("Reveal installation log in Finder")
             }
         }
         .padding(.horizontal, 4)

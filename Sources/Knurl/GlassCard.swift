@@ -180,7 +180,7 @@ struct InfoRow: View {
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.tertiary)
-                .help("Copy")
+                .quickHelp("Copy")
             }
             Spacer(minLength: 0)
         }

@@ -70,7 +70,7 @@ public struct LogPanel: View {
             .foregroundStyle(.secondary)
             .contentShape(Rectangle())
             .hitAreaRect()
-            .help("Copy log")
+            .quickHelp("Copy log")
 
             if let persistentLogURL {
                 Button {
@@ -84,7 +84,7 @@ public struct LogPanel: View {
                 .foregroundStyle(.secondary)
                 .contentShape(Rectangle())
                 .hitAreaRect()
-                .help("Reveal installation log in Finder")
+                .quickHelp("Reveal installation log in Finder")
             }
         }
         .padding(.horizontal, 4)

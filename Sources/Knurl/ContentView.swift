@@ -238,7 +238,7 @@ struct MainWindow: View {
             }
             .buttonStyle(.plain)
             .contentShape(Rectangle())
-            .help("Refresh")
+            .quickHelp("Refresh")
             .hitAreaRect()
         }
         .padding(.horizontal, 12)

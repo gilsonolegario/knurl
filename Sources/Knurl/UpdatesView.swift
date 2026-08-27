@@ -117,7 +117,7 @@ struct UpdatesView: View {
                         Image(systemName: "doc.on.doc").appCapsule()
                     }
                     .buttonStyle(.plain)
-                    .help("Copy command: \(command)")
+                    .quickHelp("Copy command: \(command)")
                     Button("Retry") { coordinator.updateMirrors() }
                         .buttonStyle(.bordered).controlSize(.mini)
                 }
@@ -128,7 +128,7 @@ struct UpdatesView: View {
                     Label("Update mirrors", systemImage: "network").hitAreaRect()
                 }
                 .buttonStyle(.bordered)
-                .help("Runs tlmgr update --self to refresh the TeX Live infrastructure and mirror database")
+                .quickHelp("Runs tlmgr update --self to refresh the TeX Live infrastructure and mirror database")
                 .hitAreaRect()
                 .disabled(!environment.tlmgr)
             }
@@ -210,7 +210,7 @@ struct UpdatesView: View {
                 Image(systemName: "doc.on.doc").appCapsule()
             }
             .buttonStyle(.plain)
-            .help("Copy command: \(command)")
+            .quickHelp("Copy command: \(command)")
         case .uninstalled:
             EmptyView()
         }

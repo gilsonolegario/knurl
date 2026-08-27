@@ -168,7 +168,7 @@ struct ReportView: View {
             .buttonStyle(.bordered)
             .hitAreaRect()
             .keyboardShortcut("d")
-            .help("Detect missing (⌘D)")
+            .quickHelp("Detect missing (⌘D)")
 
             Button {
                 onInstallAll()
@@ -193,7 +193,7 @@ struct ReportView: View {
             .tint(.green)
             .hitAreaRect()
             .keyboardShortcut("i")
-            .help("Install all (⌘I)")
+            .quickHelp("Install all (⌘I)")
 
             Spacer()
         }
