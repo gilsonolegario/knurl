@@ -132,6 +132,20 @@
     .note code.cmd { display: block; overflow-x: auto; }
   }
 
+  /* Screenshots */
+  .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 18px; }
+  .shot {
+    border-radius: 18px; overflow: hidden;
+    border: 1px solid var(--hairline);
+    background: var(--card);
+    box-shadow: 0 24px 60px rgba(0,0,0,.35);
+    transition: transform .2s ease, background .2s ease;
+  }
+  .shot:hover { transform: translateY(-2px); background: var(--card-hover); }
+  .shot img { display: block; width: 100%; height: auto; }
+  .shot figcaption { padding: 13px 18px; font-size: 13.5px; color: var(--text-2); }
+  .shot figcaption strong { color: var(--text); font-weight: 650; }
+
   footer {
     position: relative;
     border-top: 1px solid var(--hairline); margin-top: 48px;
@@ -198,6 +212,21 @@
         <h3>Native glass UI</h3>
         <p>Translucent window, floating sidebar and status tiles — built for Sequoia, in light and dark mode.</p>
       </div>
+    </div>
+  </section>
+
+  <section id="screenshots">
+    <h2>Screenshots</h2>
+    <p class="section-sub">Knurl in action — project analysis, diagnostics and one-click installs.</p>
+    <div class="shots">
+      <figure class="shot">
+        <img src="screenshots/packages.png" alt="Knurl package analysis table showing installed and missing TeX Live packages">
+        <figcaption><strong>Package analysis</strong> — CTAN → TeX Live mapping, 17 packages checked, 13 installed and 4 missing, ready to install in one click.</figcaption>
+      </figure>
+      <figure class="shot">
+        <img src="screenshots/dashboard.png" alt="Knurl environment diagnostics dashboard showing TeX Live, engines, tools and disk usage">
+        <figcaption><strong>Environment diagnostics</strong> — TeX Live distribution, engines and tools, and disk usage at a glance.</figcaption>
+      </figure>
     </div>
   </section>
 
