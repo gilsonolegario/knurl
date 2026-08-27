@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Knurl — TeX diagnostics & package installer for macOS</title>
 <meta name="description" content="Knurl analyzes your LaTeX projects, detects missing engines and packages, and installs everything in one click. Universal binary, macOS Sequoia 15+.">
+<link rel="icon" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
 <style>
   :root {
     --bg: #17120A;
@@ -142,9 +144,30 @@
     transition: transform .2s ease, background .2s ease;
   }
   .shot:hover { transform: translateY(-2px); background: var(--card-hover); }
-  .shot img { display: block; width: 100%; height: auto; }
+  .shot img { display: block; width: 100%; height: auto; cursor: zoom-in; }
   .shot figcaption { padding: 13px 18px; font-size: 13.5px; color: var(--text-2); }
   .shot figcaption strong { color: var(--text); font-weight: 650; }
+
+  /* Lightbox */
+  #lightbox {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(10,8,4,.92);
+    display: none; align-items: center; justify-content: center;
+    padding: 48px;
+  }
+  #lightbox.open { display: flex; }
+  #lightbox img {
+    max-width: 100%; max-height: 100%;
+    border-radius: 14px;
+    box-shadow: 0 30px 90px rgba(0,0,0,.65);
+  }
+  #lightbox .close {
+    position: absolute; top: 18px; right: 24px;
+    font-size: 30px; line-height: 1; color: var(--text-2);
+    cursor: pointer; border: none; background: none; font-family: inherit;
+    padding: 8px;
+  }
+  #lightbox .close:hover { color: var(--text); }
 
   footer {
     position: relative;
@@ -220,12 +243,16 @@
     <p class="section-sub">Knurl in action — project analysis, diagnostics and one-click installs.</p>
     <div class="shots">
       <figure class="shot">
-        <img src="screenshots/packages.png" alt="Knurl package analysis table showing installed and missing TeX Live packages">
+        <img src="screenshots/packages.png" data-full="screenshots/packages-full.png" alt="Knurl package analysis table showing installed and missing TeX Live packages">
         <figcaption><strong>Package analysis</strong> — CTAN → TeX Live mapping, 17 packages checked, 13 installed and 4 missing, ready to install in one click.</figcaption>
       </figure>
       <figure class="shot">
-        <img src="screenshots/dashboard.png" alt="Knurl environment diagnostics dashboard showing TeX Live, engines, tools and disk usage">
+        <img src="screenshots/dashboard.png" data-full="screenshots/dashboard-full.png" alt="Knurl environment diagnostics dashboard showing TeX Live, engines, tools and disk usage">
         <figcaption><strong>Environment diagnostics</strong> — TeX Live distribution, engines and tools, and disk usage at a glance.</figcaption>
+      </figure>
+      <figure class="shot">
+        <img src="screenshots/notex.png" data-full="screenshots/notex-full.png" alt="Knurl dashboard when no TeX distribution is installed, showing the Install BasicTeX call to action">
+        <figcaption><strong>First run without TeX</strong> — when no distribution is found, Knurl offers a one-click <em>Install BasicTeX</em> to fetch the minimal TeX Live toolchain.</figcaption>
       </figure>
     </div>
   </section>
@@ -250,5 +277,26 @@
     <p><a href="https://github.com/gilsonolegario/knurl">github.com/gilsonolegario/knurl</a></p>
   </div>
 </footer>
+
+<div id="lightbox" role="dialog" aria-modal="true" aria-label="Screenshot expandido">
+  <button class="close" id="lightboxClose" aria-label="Fechar">✕</button>
+  <img id="lightboxImg" src="" alt="">
+</div>
+<script>
+  const lb = document.getElementById('lightbox');
+  const lbImg = document.getElementById('lightboxImg');
+  const lbClose = document.getElementById('lightboxClose');
+  document.querySelectorAll('.shot img').forEach(function (img) {
+    img.addEventListener('click', function () {
+      lbImg.src = img.dataset.full;
+      lbImg.alt = img.alt;
+      lb.classList.add('open');
+    });
+  });
+  function closeLightbox() { lb.classList.remove('open'); }
+  lb.addEventListener('click', function (e) { if (e.target === lb) closeLightbox(); });
+  lbClose.addEventListener('click', closeLightbox);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeLightbox(); });
+</script>
 </body>
 </html>
