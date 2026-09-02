@@ -14,6 +14,7 @@ Drop your `.tex` project, find out what's missing, install it in one click.
 ![Swift](https://img.shields.io/badge/Swift-6.0-F05138?logo=swift&logoColor=white)
 ![Architecture](https://img.shields.io/badge/binary-universal%20arm64%20%2B%20x86__64-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-FFDD00?style=flat&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/gilsonolegario)
 
 </div>
 
