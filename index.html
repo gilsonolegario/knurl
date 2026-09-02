@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Knurl — TeX diagnostics & package installer for macOS</title>
 <meta name="description" content="Knurl analyzes your LaTeX projects, detects missing engines and packages, and installs everything in one click. Universal binary, macOS Ventura 13+.">
-<link rel="icon" href="icon.png">
-<link rel="apple-touch-icon" href="icon.png">
 <style>
   :root {
     --bg: #17120A;
@@ -70,6 +68,9 @@
   .btn-primary { background: var(--accent); color: #17120A; box-shadow: 0 10px 26px rgba(245,197,66,.25); }
   .btn-ghost { color: var(--text); background: var(--card); border: 1px solid var(--hairline); }
   .dl-meta { margin-top: 14px; font-size: 13px; color: var(--text-2); }
+  .coffee { margin-top: 14px; font-size: 14px; }
+  .coffee a { color: var(--text-2); text-decoration: none; transition: color .15s ease; }
+  .coffee a:hover { color: #FFDD00; }
 
   /* Sections */
   section { padding: 48px 0; }
@@ -134,41 +135,6 @@
     .note code.cmd { display: block; overflow-x: auto; }
   }
 
-  /* Screenshots */
-  .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 18px; }
-  .shot {
-    border-radius: 18px; overflow: hidden;
-    border: 1px solid var(--hairline);
-    background: var(--card);
-    box-shadow: 0 24px 60px rgba(0,0,0,.35);
-    transition: transform .2s ease, background .2s ease;
-  }
-  .shot:hover { transform: translateY(-2px); background: var(--card-hover); }
-  .shot img { display: block; width: 100%; height: auto; cursor: zoom-in; }
-  .shot figcaption { padding: 13px 18px; font-size: 13.5px; color: var(--text-2); }
-  .shot figcaption strong { color: var(--text); font-weight: 650; }
-
-  /* Lightbox */
-  #lightbox {
-    position: fixed; inset: 0; z-index: 100;
-    background: rgba(10,8,4,.92);
-    display: none; align-items: center; justify-content: center;
-    padding: 48px;
-  }
-  #lightbox.open { display: flex; }
-  #lightbox img {
-    max-width: 100%; max-height: 100%;
-    border-radius: 14px;
-    box-shadow: 0 30px 90px rgba(0,0,0,.65);
-  }
-  #lightbox .close {
-    position: absolute; top: 18px; right: 24px;
-    font-size: 30px; line-height: 1; color: var(--text-2);
-    cursor: pointer; border: none; background: none; font-family: inherit;
-    padding: 8px;
-  }
-  #lightbox .close:hover { color: var(--text); }
-
   footer {
     position: relative;
     border-top: 1px solid var(--hairline); margin-top: 48px;
@@ -192,7 +158,6 @@
     <div class="chips">
       <span class="chip g">macOS Ventura 13+</span>
       <span class="chip">Universal · Apple Silicon &amp; Intel</span>
-      <span class="chip">v1.1</span>
       <span class="chip b">Free &amp; open source</span>
     </div>
     <div class="btn-row">
@@ -200,6 +165,7 @@
       <a class="btn btn-ghost" href="https://github.com/gilsonolegario/knurl">Source code</a>
     </div>
     <p class="dl-meta">v1.0 · ~3 MB · universal binary (arm64 + x86_64)</p>
+    <p class="coffee"><a href="https://buymeacoffee.com/gilsonolegario">☕ Buy me a coffee</a></p>
   </header>
 
   <section id="features">
@@ -239,25 +205,6 @@
     </div>
   </section>
 
-  <section id="screenshots">
-    <h2>Screenshots</h2>
-    <p class="section-sub">Knurl in action — project analysis, diagnostics and one-click installs.</p>
-    <div class="shots">
-      <figure class="shot">
-        <img src="screenshots/packages.png" data-full="screenshots/packages-full.png" alt="Knurl package analysis table showing installed and missing TeX Live packages">
-        <figcaption><strong>Package analysis</strong> — CTAN → TeX Live mapping, 17 packages checked, 13 installed and 4 missing, ready to install in one click.</figcaption>
-      </figure>
-      <figure class="shot">
-        <img src="screenshots/dashboard.png" data-full="screenshots/dashboard-full.png" alt="Knurl environment diagnostics dashboard showing TeX Live, engines, tools and disk usage">
-        <figcaption><strong>Environment diagnostics</strong> — TeX Live distribution, engines and tools, and disk usage at a glance.</figcaption>
-      </figure>
-      <figure class="shot">
-        <img src="screenshots/notex.png" data-full="screenshots/notex-full.png" alt="Knurl dashboard when no TeX distribution is installed, showing the Install BasicTeX call to action">
-        <figcaption><strong>First run without TeX</strong> — when no distribution is found, Knurl offers a one-click <em>Install BasicTeX</em> to fetch the minimal TeX Live toolchain.</figcaption>
-      </figure>
-    </div>
-  </section>
-
   <section id="install">
     <h2>How to install</h2>
     <p class="section-sub">Under a minute.</p>
@@ -271,33 +218,17 @@
   </section>
 </main>
 
+  <section class="final" style="text-align:center; padding: 56px 0 8px;">
+    <p style="font-size:15px; color:var(--text-2); margin-bottom:18px;">Free and open source. If Knurl saved you a compile, consider a coffee.</p>
+    <a class="btn btn-ghost" href="https://buymeacoffee.com/gilsonolegario">☕ Buy me a coffee</a>
+  </section>
+
 <footer>
   <div class="foot-inner">
     <p>Built with Swift 6 + SwiftUI for macOS Ventura 13+</p>
     <p>Universal binary · Apple Silicon &amp; Intel</p>
-    <p><a href="https://github.com/gilsonolegario/knurl">github.com/gilsonolegario/knurl</a></p>
+    <p><a href="https://github.com/gilsonolegario/knurl">github.com/gilsonolegario/knurl</a> · <a href="https://buymeacoffee.com/gilsonolegario">☕ Buy me a coffee</a></p>
   </div>
 </footer>
-
-<div id="lightbox" role="dialog" aria-modal="true" aria-label="Screenshot expandido">
-  <button class="close" id="lightboxClose" aria-label="Fechar">✕</button>
-  <img id="lightboxImg" src="" alt="">
-</div>
-<script>
-  const lb = document.getElementById('lightbox');
-  const lbImg = document.getElementById('lightboxImg');
-  const lbClose = document.getElementById('lightboxClose');
-  document.querySelectorAll('.shot img').forEach(function (img) {
-    img.addEventListener('click', function () {
-      lbImg.src = img.dataset.full;
-      lbImg.alt = img.alt;
-      lb.classList.add('open');
-    });
-  });
-  function closeLightbox() { lb.classList.remove('open'); }
-  lb.addEventListener('click', function (e) { if (e.target === lb) closeLightbox(); });
-  lbClose.addEventListener('click', closeLightbox);
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeLightbox(); });
-</script>
 </body>
 </html>
